@@ -29,7 +29,6 @@ def sersic1(R, Ie, Re):
 	return sersic(R,Ie,Re,1)
 
 
-
 ### Reading in Beam information so that we can correct to Jy. 
 fits_file = fits.open('HZ7_COMB_CUBE_10.fits')
 beam_data = fits_file[1].data
@@ -228,3 +227,4 @@ plt.tick_params(which='both', width=2) #this has to be a separate line because w
 plt.tick_params(which='major', length=8, direction='in') #If you want tick marks on the opposite side also, add right=True
 plt.tick_params(which='minor', length=4, direction='in')
 plt.show()
+

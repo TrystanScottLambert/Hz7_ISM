@@ -14,7 +14,6 @@ from astropy.wcs import WCS
 from astropy import modeling
 from astropy.convolution import convolve, Box1DKernel
 from astropy.modeling.models import Sersic1D
-import TEST_Surface_Profile as TEST
 from RegscorePy import * 
 from scipy.optimize import curve_fit
 from tqdm import tqdm
@@ -165,9 +164,7 @@ def make_hist_xy(image_data,method='sum'):
 #for value in tqdm(range(1,17)):
 
 value=0
-infile = 'HZ7_mom_mask2.integrated.fits'
-infile = 'HZ7_mom_includepix.integrated.fits'
-infile = 'test_mom.fits'
+infile = 'data/moment0.fits'
 moment0 = fits.open(infile)
 data = moment0[0].data[0][0]   # open file and strip data into the file
 header = moment0[0].header
@@ -199,9 +196,8 @@ plotting_radiis = np.append(np.array([0]),np.arange(1.5*binwidth_pix,max_pix,bin
 radii_arcsec = radiis*arcsec_per_pixel  														# converting radiis into arcseconds
 plotting_radiis_arcsec = plotting_radiis*arcsec_per_pixel
 
-#center_pix = (155,139)
+center_pix = (155,139)
 #center_pix = (148,135)
-center_pix = TEST.Locate_Center(data,plot=True)
 #center_pix = (49,40)
 #center_pix = (len(data)/2,len(data[0])/2)    # define where we center the expansion
 

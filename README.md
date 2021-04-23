@@ -1,2 +1,2 @@
-# Hz7_ISM
-Scripts for analysis of Hz7
+# ISM_CII
+Repository to keep an array of script for work on Hz7 high redshift observations

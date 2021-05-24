@@ -1,5 +1,5 @@
 GenerateMomentMaps.py --> makes moments 0,1, & 2 as well as masked versions of these. 
-
+CenterCubeOnCII.py --> reads in the combined cube and makes the central velocity 0 
 
 
 

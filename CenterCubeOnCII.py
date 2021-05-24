@@ -59,6 +59,7 @@ while np.abs(val) > tolerance:
 optimumFrequency = midpoint
 
 hdu[0].header['RESTFRQ'] = optimumFrequency
+optimumredshift =  (-optimumFrequency+ciiRestFreq)/optimumFrequency  
 fits.writeto('data/HZ7_Centered.fits',hdu[0].data,hdu[0].header,overwrite=True)
 
 

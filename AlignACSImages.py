@@ -19,30 +19,37 @@ from astropy.visualization import ZScaleInterval
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 from astropy.wcs import WCS
+import os
 
+##########################
+#### Input Parameters ####
+##########################
+sigmaParameter = 3 # the standard deviation from the mean when working out sigma clipped stats (i.e. excluding extreme values)
+fwhmParameter = 3 # the FWHM value to accept a source as a detection (and not a bad pixel)
+thresholdParameter = 5  # the number of standard deviations to accept a source as a detection 
+gaiaFile = 'data/gaiaSources.txt' # location and name of your gaia sources (https://gea.esac.esa.int/archive/). Save as csv. 
+searchRadius = 10 # the arcsecond to determine a match between the gaia catalog and your image sources
+##########################
 
-astrometry_apikey = 'ywayokgixwuntvsd'
-Hz7_RA = 1.498769860000E+02
-Hz7_Dec =  2.134113000000E+00
+#####################
+#### Input Files ####
+#####################
 
+#files you want to correct to gaia
 infile1 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
 infile2 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits'
 infile3 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits'
 infile4 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_total_sci.fits'
 infiles = [infile1,infile2,infile3,infile4]
 
-f475 = fits.open(infile1) 
-f606 = fits.open(infile2) 
-f814 = fits.open(infile3)
-ftotal = fits.open(infile4) 
+#reading in the gaia data 
+raGaia, decGaia = np.loadtxt(gaiaFile,unpack=True,delimiter=',',skiprows=1)
 
-f475Data = f475[1].data
-f606Data = f606[1].data 
-f814Data = f814[1].data
-ftotalData = ftotal[1].data
+###################
+#### Functions ####
+###################
 
-
-#make sure to choose the correct hdu number (for acs this is hdu[1])
+#make sure to choose the correct hdu number (for asc this is hdu[1])
 def locateStarPositionsInImage(fitsFile):
 	imageData = fitsFile.data
 	imageWCS = WCS(fitsFile.header)
@@ -54,8 +61,8 @@ def locateStarPositionsInImage(fitsFile):
 
 
 def locateStarsInImage(imageArray):
-	mean,median,std = sigma_clipped_stats(imageArray,sigma=3)
-	daofind = DAOStarFinder(fwhm=3,threshold=5*std)
+	mean,median,std = sigma_clipped_stats(imageArray,sigma=sigmaParameter)
+	daofind = DAOStarFinder(fwhm=fwhmParameter,threshold=thresholdParameter*std)
 	sources = daofind(imageArray-median)
 
 	return sources
@@ -67,9 +74,8 @@ def convertSourcesToArrays(sourcesOutput):
 
 	return xPositions,yPositions
 
-
+# A plotting function to help choose the correct values for the input Parameters
 def plotTestImage(imageArray):
-	imageArray = imageArray[1800:4000,1000:4000]
 	interval = ZScaleInterval()
 	limits = interval.get_limits(imageArray)
 	sources = locateStarsInImage(imageArray)
@@ -80,47 +86,8 @@ def plotTestImage(imageArray):
 	apertures.plot(color='red', lw=1.5, alpha=0.5)
 	plt.show()
 
-
-def crossMatchPositionalArrays(xpositionArray1,ypositionArray1,xpositionArray2,ypositionArray2,pixelTolerance):
-	idxMatches = []
-	matchDifferences = []
-	for i in range(len(xpositionArray2)):
-		differences = np.sqrt((xpositionArray2[i]-xpositionArray1)**2+(ypositionArray2[i]-ypositionArray1)**2)
-		closestMatch = np.where(differences<pixelTolerance)[0]
-
-		if len(closestMatch) != 0 :
-			closestMatch = closestMatch[0]
-			difference = differences[closestMatch]
-
-			if closestMatch in idxMatches:
-				duplicatePosition = np.where(np.array(idxMatches)==closestMatch)[0]
-
-				if matchDifferences[duplicatePosition[0]] > difference:
-					matchDifferences[duplicatePosition[0]] = closestMatch
-			else:
-				idxMatches.append(closestMatch)
-			matchDifferences.append(difference)
-
-	return idxMatches,matchDifferences
-
-
-def crossMatchToGaia(gaiaRA,gaiaDec,sourceRA,sourceDec,onSkyLimit):
-	gaiaCatalog = SkyCoord(ra=gaiaRA*u.deg,dec=gaiaDec*u.deg,frame='icrs')
-	sourceCatalog = SkyCoord(ra=sourceRA*u.deg,dec=sourceDec*u.deg,frame='icrs')
-
-	idxMatches,Distances,_ = gaiaCatalog.match_to_catalog_sky(sourceCatalog)
-	separationContraint = Distances < onSkyLimit*u.arcsec
-
-	acceptableGaiaMatches = separationContraint
-	acceptableSourceMatches = idxMatches[separationContraint]
-
-	print(f'{len(acceptableSourceMatches)} confirmed matches...')
-
-	return acceptableGaiaMatches, acceptableSourceMatches 
-
-
-def calculatePositionalDifferences(gaiaRA,gaiaDec,sourceRA,sourceDec,onSkyLimit,plot=False):
-	acceptableGaiaMatches, acceptableSourceMatches = crossMatchToGaia(gaiaRA,gaiaDec,sourceRA,sourceDec,onSkyLimit)
+def calculatePositionalDifferences(gaiaRA,gaiaDec,sourceRA,sourceDec,plot=False):
+	acceptableGaiaMatches, acceptableSourceMatches = crossMatchToGaia(gaiaRA,gaiaDec,sourceRA,sourceDec)
 
 	raDifferences = np.abs(gaiaRA[acceptableGaiaMatches] - sourceRA[acceptableSourceMatches])
 	decDifferences = np.abs(gaiaDec[acceptableGaiaMatches] - sourceDec[acceptableSourceMatches])
@@ -135,6 +102,19 @@ def calculatePositionalDifferences(gaiaRA,gaiaDec,sourceRA,sourceDec,onSkyLimit,
 
 	return raOffset, decOffset, raOffsetError, decOffsetError
 
+def crossMatchToGaia(gaiaRA,gaiaDec,sourceRA,sourceDec):
+	gaiaCatalog = SkyCoord(ra=gaiaRA*u.deg,dec=gaiaDec*u.deg,frame='icrs')
+	sourceCatalog = SkyCoord(ra=sourceRA*u.deg,dec=sourceDec*u.deg,frame='icrs')
+
+	idxMatches,Distances,_ = gaiaCatalog.match_to_catalog_sky(sourceCatalog)
+	separationContraint = Distances < searchRadius*u.arcsec
+
+	acceptableGaiaMatches = separationContraint
+	acceptableSourceMatches = idxMatches[separationContraint]
+
+	print(f'{len(acceptableSourceMatches)} confirmed matches...')
+
+	return acceptableGaiaMatches, acceptableSourceMatches 
 
 def plotHistogramDifferences(raDifferences,decDifferences):
 	plt.subplot(211)
@@ -162,23 +142,36 @@ def correctFitsImage(fitsFile,raOffset,decOffset,ouputName):
 	fitsFile.header['CRVAL2'] = fitsFile.header['CRVAL2'] + decOffset
 	fits.writeto(ouputName,fitsFile.data,fitsFile.header,overwrite=True)
 
+#################
+#### Example ####
+#################
 
+# Before fully running the script you should make sure that the source finder is finding appropriate sources in your ASC image.
+# use the plotTestImage function to see the sources which have been identified in the image BASED ON THE INPUT PARAMATERS
 
+# e.g.
+# f105w = fits.open(infile1)
+# plotTestImage(f105w[1].data)
 
-#plotTestImage(ftotalData[1800:3000,1000:3000])
-#plotTestImage(f475Data[1800:3000,1000:3000])
-#plotTestImage(f606Data[1800:3000,1000:3000])
-#plotTestImage(f814Data[1800:3000,1000:3000])
-
-
-#reading in the gaia data 
-raGaia, decGaia = np.loadtxt('data/gaiaSources.txt',unpack=True,delimiter=',',skiprows=1)
-
+# you an align the images in this fasion (I'm just doing all of them at once but you can do one at a time via terminal if you wish)
+f = open('data/ASCImages/gaiacorrected/Offsets.txt','w')  # file to write the offsets
+f.write('#File RA_offset Dec_offset RA_offset_err Dec_offset_err \n')
 for infile in infiles:
-	print(infile)
-	fitsFileHDU = fits.open(infile)
-	fitsFile = fitsFileHDU[1] # for the case of the ACS images
-	raSources, decSources = locateStarPositionsInImage(fitsFile)
-	raOffset,decOffset,raOffsetError,decOffsetError = calculatePositionalDifferences(raGaia,decGaia,raSources,decSources,10,plot=True)
-	correctFitsImage(fitsFile,raOffset,decOffset,infile.split('/')[-1].split('.fit')[0]+str('_gaia_corrected.fits'))
+	outfile = 'data/ASCImages/gaiacorrected/' + infile.split('/')[-1].split('.fit')[0] + '_gaia_corrected.fits'  # choose your outputfile name
+	fitsFileHDU = fits.open(infile)  # opening your file 
+	fitsFile = fitsFileHDU[1] # for the case of the ACS image this [1] but use the correct value. 
 
+	raSources, decSources = locateStarPositionsInImage(fitsFile) 
+	raOffset,decOffset,raOffsetError,decOffsetError = calculatePositionalDifferences(raGaia,decGaia,raSources,decSources,plot=False) # use plot=True to get a histogram plot of the offsets (though this is usually small numbers)
+	correctFitsImage(fitsFile,raOffset,decOffset,outfile) 
+
+	f.write(f'{infile} {raOffset} {decOffset} {raOffsetError} {decOffsetError} \n')
+
+	# optional # 
+	# you can (and probably should) do a quick scatter plot to make sure that the number of matches and the types of matches are looking reasonable
+	# plt.scatter(raGaia, decGaia, s = 100)
+	# plt.scatter(raSource, decSource, s = 50)
+	# plt.show()
+f.close()
+
+# Be sure to double check alignment in ds9

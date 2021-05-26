@@ -1,0 +1,5 @@
+#File RA_offset Dec_offset RA_offset_err Dec_offset_err 
+/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits 3.598281649885848e-05 7.780827341996588e-05 2.136918018068603e-06 3.3647775516048797e-06 
+/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits 3.39624502672109e-05 7.715535141805674e-05 1.6873383684930007e-06 2.6882533871887344e-06 
+/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits 3.5867638104036814e-05 7.557036659555649e-05 2.4414008619832368e-06 3.833367275546679e-06 
+/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_total_sci.fits 3.5124552262288944e-05 7.726863344736934e-05 1.7325318964676749e-06 3.0136842140033904e-06 

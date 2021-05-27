@@ -9,7 +9,7 @@ import astropy.units as u
 from astropy.wcs import WCS
 from astropy.visualization import simple_norm
 
-infile = 'test_mom.fits'
+infile = '.fits'
 moment0 = fits.open(infile)
 data_CII_all = moment0[0].data[0][0]
 Header_CII_all = moment0[0].header

@@ -36,3 +36,11 @@ def convertArcsecsToPix(cubeHeader,arcsecValue):
     degPerPix = cubeHeader['CDELT2']
     arcsecsPerPix = degPerPix * 3600
     return arcsecValue/arcsecsPerPix
+
+#must be in arcseconds
+def drawBeamManually(majorBeam,minorBeam,positionalAngle,cdeltValue,ax):
+    degPerPix = cdeltValue
+    arcsecsPerPix = degPerPix * 3600
+    majorBeamPixel, minorBeamPixel = majorBeam/arcsecsPerPix, minorBeam/arcsecsPerPix
+    aeb = AnchoredEllipseBeam(ax.transData,width=majorBeamPixel,height=minorBeamPixel,angle=positionalAngle)
+    ax.add_artist(aeb)

@@ -3,10 +3,14 @@ import os
 import astropy.io.fits as fits
 import numpy as np
 
-names = ['HZ7_mom_includepix.integrated','HZ7_mom_includepix.weighted_coord',
-			'HZ7_mom_includepix.weighted_dispersion_coord','HZ7_mom_mask1.integrated',
-			'HZ7_mom_mask1.weighted_coord','HZ7_mom_mask1.weighted_dispersion_coord',
-			'HZ7_mom_mask2.integrated','HZ7_mom_mask2.weighted_coord',
+names = ['HZ7_mom_includepix.integrated',
+			'HZ7_mom_includepix.weighted_coord',
+			'HZ7_mom_includepix.weighted_dispersion_coord',
+			'HZ7_mom_mask1.integrated',
+			'HZ7_mom_mask1.weighted_coord',
+			'HZ7_mom_mask1.weighted_dispersion_coord',
+			'HZ7_mom_mask2.integrated',
+			'HZ7_mom_mask2.weighted_coord',
 			'HZ7_mom_mask2.weighted_dispersion_coord']
 
 ###############
@@ -14,7 +18,7 @@ names = ['HZ7_mom_includepix.integrated','HZ7_mom_includepix.weighted_coord',
 ###############
 rms_val = 2.3e-2  #rms from casa viewer 
 sigma = 2.5   
-infile = 'data/HZ7_Combined.fits'
+infile = 'data/HZ7_Centered.fits'
 emissionChannels = '51~75'   #channels from casa viewer
 
 ###########################################################

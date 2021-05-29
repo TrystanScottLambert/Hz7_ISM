@@ -15,6 +15,8 @@ import astropy.units as u
 import plotBeam as pb
 matplotlib.rcParams.update({'font.size': 15})
 
+rmsCube = 2e-5
+levels = np.arange(3,6)*rmsCube
 
 def getSpectralValues(cube):
 	wcs = WCS(cube.header,naxis=3)
@@ -51,7 +53,7 @@ startingChannel, endingChannel, leftPlots, bottomPlots, cornerPlot = getPlotting
 ###################
 ### Input File ####
 ###################
-infile = 'data/HZ7_Combined.fits'
+infile = 'data/HZ7_Centered.fits'
 hdu = fits.open(infile)
 hduData = hdu[0].data[0]
 hduData = hduData[startingChannel:endingChannel]
@@ -69,17 +71,13 @@ cubeVel = cube.with_spectral_unit(u.km/u.s, rest_value = restFrequency*u.Hz, vel
 velocities = getSpectralValues(cubeVel)
 velocitiesInChannels = velocities[startingChannel:endingChannel]
 
-#CubeRMS = np.sqrt(Cube.variance[:, 0, 0]) * 1E3
-#MedRMS = np.median(CubeRMS)
-#vrange = [-3 * MedRMS, 11 * MedRMS]
-
 fig, axs = plt.subplots(box[0], box[1],figsize=(12,12), sharex=True, sharey=True, subplot_kw={'projection':hduWCS})
 fig.subplots_adjust(wspace=0.05, hspace=0.05)
 for i in range(numberFrames):
 	xlabel=r'$\alpha$'
 	ylabel=r'$\delta$'
 	ax = axs.flat[i]
-	im = ax.imshow(hduData[i]*1e3,vmin = -1, vmax= 1.5, cmap='RdYlBu_r')
+	im = ax.imshow(hduData[i]*1e3,vmin = -1.5, vmax= 1.5, cmap='RdYlBu_r')
 	raAxes = ax.coords[0]
 	decAxes = ax.coords[1]
 	raAxes.set_ticks(exclude_overlapping=True)
@@ -102,6 +100,7 @@ for i in range(numberFrames):
 		raAxes.set_axislabel('')
 
 	pb.drawBeamManually(beamData[i][0],beamData[i][1],-beamData[i][2],CDELT,ax)
+	ax.contour(hduData[i]*1e3, cmap='Greys_r', alpha=0.5, levels=levels)
 	ax.text(0.5, 0.85, str(round(1e-3*velocitiesInChannels[i]))+ r' km s$^{-1}$' , transform=ax.transAxes, fontsize=12,color='black', bbox={'facecolor': 'white', 'alpha': 0.8, 'pad': 2},ha='right')
 	ax.minorticks_on() #minor ticks work for the multi-plots
 	ax.tick_params(which='major', length=6, width=2, direction='in')

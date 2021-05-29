@@ -16,7 +16,6 @@ from astropy import modeling
 from tqdm import tqdm
 from astropy.convolution import convolve, Box1DKernel
 from astropy.modeling.models import Sersic1D
-import TEST_Surface_Profile as TEST
 from RegscorePy import * 
 from scipy.optimize import curve_fit
 
@@ -30,12 +29,11 @@ def sersic1(R, Ie, Re):
 
 
 ### Reading in Beam information so that we can correct to Jy. 
-fits_file = fits.open('HZ7_COMB_CUBE_10.fits')
+fits_file = fits.open('data/HZ7_Combined.fits')
 beam_data = fits_file[1].data
 corrections = np.array([(beam[0]*(1./0.02599)*beam[1]*(1./0.02599)*np.pi)/(4*np.log(2)) for beam in beam_data])
 
-#infile = 'Integrated_spectrum_Channels.txt'
-infile = 'Low_Res_IS.txt'
+infile = 'data/integratedSpectrum.txt'
 x,y = np.loadtxt(infile,unpack=True)
 
 arg = np.argsort(x)
@@ -140,7 +138,7 @@ def print_set(x,y,show_sigma = False,save_name=None):
 	print_set(x,y,save_name='is_'+str(i)+'.png')'''
 
 ############## Plotting one very nice spectrum with corrected beams to be compared to Capak. #################
-infile = 'Low_Res_IS.txt'
+infile = 'data/integratedSpectrum.txt'
 x,y = np.loadtxt(infile,unpack=True)
 
 arg = np.argsort(x)
@@ -156,7 +154,7 @@ print_set(x,y,save_name='CII_Integrated_Spectrum.png')
 
 corrections = np.array([(beam[0]*(1./0.02599)*beam[1]*(1./0.02599)*np.pi)/(4*np.log(2)) for beam in beam_data])
 corrections = corrections[21:]
-x,y = np.loadtxt('is_density.txt',unpack=True)
+x,y = np.loadtxt('data/integratedSpectrum.txt',unpack=True)
 arg = np.argsort(x)
 x = x[arg]
 y = y[arg]*1000 #convert into mJy / pixel
@@ -166,7 +164,7 @@ y = y[arg]*1000 #convert into mJy / pixel
 
 ##################### PLotting old Integrated Spectrum vs the New Integrated spectrum ####################################
 
-infile = 'is_old.txt'
+infile = 'data/integratedSpectrum.txt'
 x,y = np.loadtxt(infile,unpack=True)
 
 arg = np.argsort(x)
@@ -176,7 +174,7 @@ y = y[arg]*1000  #convert into mJy / pixel
 print_set(x,y)
 
 
-infile = 'is_new.txt'
+infile = 'data/integratedSpectrum.txt'
 x,y = np.loadtxt(infile,unpack=True)
 arg = np.argsort(x)
 arg = np.argsort(x)
@@ -187,8 +185,7 @@ print_set(x,y)
 plt.show()
 
 
-infile = 'IS_all_channels.txt'
-infile = 'all_channels_radio_velocity.txt'
+infile = 'data/integratedSpectrum.txt'
 x,y = np.loadtxt(infile,unpack=True)
 
 arg = np.argsort(x)

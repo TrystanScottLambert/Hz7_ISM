@@ -13,11 +13,22 @@ from astropy.wcs import WCS
 import plotBeam as pb
 matplotlib.rcParams.update({'font.size': 20})   #Always run this line just to have tick mark sizes looking good. 
 
+'''levels = [0.0575186,
+			0.106748,
+			0.155977,
+			0.205206,
+			0.254435]'''
+
+rms_val = 2.3e-2
+levels = np.arange(4,8)*rms_val
+
+
 def plotFits(fitsFileName):
 	fitsData,fitsHeader, fitsWCS = openFitsFile(fitsFileName)
 	fig = plt.figure()
 	ax = fig.add_subplot(projection=fitsWCS)
 	image = ax.imshow(fitsData,cmap='magma')
+	ax.contour(fitsData, cmap='Greys_r', alpha=0.5, levels=levels)
 	plt.colorbar(image,label=fitsHeader['BUNIT'])
 	pb.drawBeam(fitsHeader,ax)
 	prettifyPlot('RA','Dec')

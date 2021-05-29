@@ -1,0 +1,7 @@
+taskname           = "imview"
+raster             =  "HZ7_Centered.fits"
+contour            =  {}
+zoom               =  1
+axes               =  {}
+out                =  ""
+#imview(raster="HZ7_Centered.fits",contour={},zoom=1,axes={},out="")

@@ -9,55 +9,61 @@ from astropy.io import fits
 from astropy import units as u 
 from spectral_cube import SpectralCube
 from astropy.wcs import WCS
-import pylab as plt
 
-ciiRestFreq = 1897420620253.1646
-redshift = 5.2532
-centerRadioFreq = 2.517843e5 #km/s
-ciiRedshifted = ciiRestFreq*(1./(1+redshift))
+class Cube:
+	ciiRestFreq = 1897420620253.1646
+	def __init__(self,input_file,output_file,central_channel):
+		self.central_channel = central_channel
+		self.input_file = input_file
+		self.output_file = output_file
+		self.hdu = fits.open(self.input_file)
 
-infile = 'data/HZ7_Combined.fits'
-hdu = fits.open(infile)
-currentRestFreq = hdu[0].header['RESTFRQ'] 
+	def centralizeCube(self):
+		optimumFrequency = self.findOptimumFrequency()
+		self.hdu[0].header['RESTFRQ'] = optimumFrequency
+		self.redshift = (-optimumFrequency+self.ciiRestFreq)/optimumFrequency
+		self.hdu.writeto(self.output_file,overwrite=True)
+
+	def findOptimumFrequency(self):
+		left, right = self.findLeftRight()
+		val = 10 
+		tolerance = 0.000001
+		while np.abs(val) > tolerance:
+			midpoint = np.mean([left,right])
+			val = self.calculateVelocityFromFrequency(midpoint)
+			if val > 0:
+				right = midpoint
+			elif val < 0:
+				left = midpoint
+		return midpoint
+
+	def findLeftRight(self):
+		startingValue = self.ciiRestFreq
+		currentVelValue = self.calculateVelocityFromFrequency(startingValue)
+		if currentVelValue < 0:
+			while currentVel <0:
+				startingValue = startingValue*10
+				currentVelValue = self.calculateVelocityFromFrequency(startingValue)
+			return ciiRestFreq, startingValue
+
+		elif currentVelValue > 0:
+			while currentVelValue > 0:
+				startingValue = startingValue/10
+				currentVelValue = self.calculateVelocityFromFrequency(startingValue)
+			return startingValue, self.ciiRestFreq
+
+		elif currentVelValue == 0:
+			print('Already Centered')
+
+	def calculateVelocityFromFrequency(self, frequency):
+		cube = SpectralCube.read(self.hdu)
+		cube_vel = cube.with_spectral_unit(u.km/u.s, rest_value = frequency* u.Hz, velocity_convention='optical')
+		wcs = WCS(cube_vel.header)
+		_,_,currentVelRange = wcs.pixel_to_world_values(np.arange(len(cube_vel)),np.arange(len(cube_vel)),np.arange(len(cube_vel)))
+		currentVel = currentVelRange[self.central_channel]
+		return currentVel
 
 
-freqDummy = np.arange(0,hdu[0].data.shape[1])
-decDummy = np.arange(0,hdu[0].data.shape[1])
-raDummy = np.arange(0,hdu[0].data.shape[1])
-
-
-#fits.writeto('data/HZ7_Centered.fits',hdu[0].data,hdu[0].header,overwrite=True)
-
-meanVels=[]
-tolerance = 0.00001
-meanfreq = np.mean([ciiRedshifted,currentRestFreq])
-meanVel=10
-
-def calculateVelforFreq(frequency):
-	cube = SpectralCube.read(hdu)
-	cube_vel = cube.with_spectral_unit(u.km/u.s, rest_value = frequency*u.Hz, velocity_convention='optical')
-	infile = 'delete_this_is_a_test.fits'
-	cube_vel.write(infile,overwrite=True)
-	hdu_vel = fits.open(infile)
-	wcs = WCS(hdu_vel[0].header,naxis=3)
-	_,_,currentVelRange = wcs.pixel_to_world_values(raDummy,decDummy,freqDummy)
-	currentVel = np.mean(currentVelRange[52:72])  # fitted guassian +- standard deviation
-	return currentVel
-
-left = ciiRedshifted
-right = currentRestFreq
-val = 10
-while np.abs(val) > tolerance:
-	midpoint = np.mean([left,right])
-	val = calculateVelforFreq(midpoint)
-	if val > 0:
-		right = midpoint
-	elif val < 0:
-		left = midpoint
-
-
-optimumFrequency = midpoint
-
-hdu[0].header['RESTFRQ'] = optimumFrequency
-optimumredshift =  (-optimumFrequency+ciiRestFreq)/optimumFrequency  
-hdu.writeto('data/HZ7_Centered.fits',overwrite=True)
+if __name__ == "__main__":
+	c = Cube('data/HZ7_Combined.fits','data/HZ7_Centered.fits',62)
+	c.centralizeCube()

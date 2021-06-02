@@ -17,6 +17,14 @@ from scipy.optimize import curve_fit
 import astroalign as aa
 from pynput.keyboard import Key, Listener
 
+def locateImageHDUValue(hdulist):
+	for i in range(len(hdulist)):
+		try:
+			hdulist[i].header['CRVAL1'] = hdulist[i].header['CRVAL1']
+			value = i
+		except:
+			pass
+	return value
 
 def splitTupples(listOfTupples):
 	firstElements = [tupple[0] for tupple in listOfTupples]
@@ -150,21 +158,113 @@ class AlignmentDuo:
 
 
 
+
+class GaiaAlignment:
+	def __init__(self, inputFile, gaiaFile):
+		self.hdulist = fits.open(inputFile)
+		hduValue = locateImageHDUValue(self.hdulist)
+		self.hdu = self.hdulist[hduValue]
+		self.hduHeader = self.hdu.header 
+		self.hduData = self.hdu.data 
+		self.wcs = WCS(self.hduHeader)
+
+		self.gaiaRA, self.gaiaDec = np.loadtxt(gaiaFile,unpack=True,delimiter=',',skiprows=1)
+		self.gaiaX, self.gaiaY = self.wcs.world_to_pixel_values(self.gaiaRA,self.gaiaDec)
+
+		self.plotImage()
+		self.generateWorldCoordinates()
+		self.calculateXYOffset()
+
+
+	def plotImage(self):
+		self.coords = []
+		fig = plt.figure()
+		interval = ZScaleInterval()
+
+		ax = fig.add_subplot()
+		limits = interval.get_limits(self.hduData)	
+		ax.imshow(self.hduData, cmap='Greys', origin='lower',interpolation='nearest',vmin=limits[0],vmax=limits[1])
+		ax.set_xlim(0,len(self.hduData[1]))
+		ax.set_ylim(0,len(self.hduData[0]))
+		ax.scatter(self.gaiaX,self.gaiaY,marker='*',s=100,facecolors='none',edgecolors='cyan')
+
+		def onclick(event):
+			if event.dblclick:
+				star,columnPix, rowPix = cutStar(event.xdata,event.ydata,self.hduData)
+				if np.abs(rowPix-event.xdata) < 15 and np.abs(columnPix-event.ydata) < 15:
+					print(f'x = {event.xdata}, y = {event.ydata}')
+					plt.scatter(rowPix, columnPix,facecolors='none',edgecolors='r',s=50)
+					fig.canvas.draw()
+					self.coords.append((rowPix,columnPix))
+		cid = fig.canvas.mpl_connect('button_press_event', onclick)
+		plt.show()
+
+	def generateWorldCoordinates(self):
+		x ,y = splitTupples(self.coords)
+		self.starWorldCoordinates = self.wcs.pixel_to_world_values(x,y)
+
+	def calculateXYOffset(self):
+		counter = 0
+		raOffsets = []
+		decOffsets = []
+		print(f'\t Gaia_Star_RA, Gaia_Star_Dec, HST_Star_RA, HST_Star_Dec, RA_Offset, Dec_Offset')
+		for i in range(len(self.coords)):
+			distances = np.sqrt((self.coords[i][0] - self.gaiaX)**2 + (self.coords[i][1] - self.gaiaY)**2)
+			idxMatch = np.where(distances == np.min(distances))[0]
+
+			matchingGaiaRA, matchingGaiaDec = self.gaiaRA[idxMatch], self.gaiaDec[idxMatch]
+			currentRAOffset, currentDecOffset = matchingGaiaRA - self.starWorldCoordinates[0][i], matchingGaiaDec - self.starWorldCoordinates[1][i]
+			raOffsets.append(currentRAOffset)
+			decOffsets.append(currentDecOffset)
+
+			print(f'Gaia Star {i+1}: {matchingGaiaRA}, {matchingGaiaDec}, {self.starWorldCoordinates[0][i]}, {self.starWorldCoordinates[1][i]}, {currentRAOffset}, {currentDecOffset}')
+
+		self.raOffset = np.mean(raOffsets)
+		self.decOffset = np.mean(decOffsets)	
+		self.raSTD = np.std(np.abs(raOffsets))
+		self.decSTD = np.std(np.abs(decOffsets))
+
+		print(f' \n\n TOTAL OFFSET: \n RA: {self.raOffset} +- {self.raSTD} \n Dec: {self.decOffset} +- {self.decSTD}')
+
+	def applySimpleCorrection(self,outputFileName):
+		self.hduHeader['CRVAL1'] = self.hduHeader['CRVAL1'] + self.raOffset
+		self.hduHeader['CRVAL2'] = self.hduHeader['CRVAL2'] + self.decOffset
+		self.hdulist.writeto(outputFileName,overwrite=True)
+
+
 if __name__ == '__main__':
-	c = AlignmentDuo('/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits', 
-		'/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits')
+	infile1 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
+	infile2 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits'
+	infile3 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits'
+	infile4 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_total_sci.fits'
+	infiles = [infile1,infile2,infile3,infile4]
+
+	for infile in infiles:
+		ga = GaiaAlignment(infile,'data/gaiaSources.txt')
+		ga.applySimpleCorrection('data/ASCImages/gaiacorrected/' + infile.split('/')[-1].split('.fit')[0] + '_gaia_corrected.fits')
+
+
 
 ###############################################################################################################################################
+gaiaFile = 'data/gaiaSources.txt' # location and name of your gaia sources (https://gea.esac.esa.int/archive/). Save as csv. 
+raGaia, decGaia = np.loadtxt(gaiaFile,unpack=True,delimiter=',',skiprows=1)
+
 
 hdu = fits.open('/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits')
 hduData = hdu[1].data
 hduHeader = hdu[1].header
+wcs = WCS(hduHeader)
+
+xGaia, yGaia = wcs.world_to_pixel_values(raGaia,decGaia)
 
 fig = plt.figure()
 ax = fig.add_subplot()
 interval = ZScaleInterval()
 limits = interval.get_limits(hduData)
 ax.imshow(hduData, cmap='Greys', origin='lower',interpolation='nearest',vmin=limits[0],vmax=limits[1])
+#ax.scatter(xGaia,yGaia, marker='*', s=100, facecolors='none', edgecolors='cyan')
+ax.set_xlim(0,len(hduData[1]))
+ax.set_ylim(0,len(hduData[0]))
 
 coords = []
 stars = []

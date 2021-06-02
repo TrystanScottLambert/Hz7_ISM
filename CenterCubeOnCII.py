@@ -1,8 +1,8 @@
-#######################################################
-#
-# Script to center HZ7_Combined.fits on [CII] line
-#
-#######################################################
+##############################################
+#                                            #
+# Script to center ALMA cubes on any channel #
+#                                            #
+##############################################
 
 import numpy as np 
 from astropy.io import fits 

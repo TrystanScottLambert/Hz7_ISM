@@ -12,13 +12,6 @@ from astropy.io import fits
 from astropy.wcs import WCS
 import plotBeam as pb
 matplotlib.rcParams.update({'font.size': 20})   #Always run this line just to have tick mark sizes looking good. 
-
-'''levels = [0.0575186,
-			0.106748,
-			0.155977,
-			0.205206,
-			0.254435]'''
-
 rms_val = 2.3e-2
 levels = np.arange(4,8)*rms_val
 
@@ -27,7 +20,7 @@ def plotFits(fitsFileName):
 	fitsData,fitsHeader, fitsWCS = openFitsFile(fitsFileName)
 	fig = plt.figure()
 	ax = fig.add_subplot(projection=fitsWCS)
-	image = ax.imshow(fitsData,cmap='magma')
+	image = ax.imshow(fitsData,cmap='coolwarm')
 	ax.contour(fitsData, cmap='Greys_r', alpha=0.5, levels=levels)
 	plt.colorbar(image,label=fitsHeader['BUNIT'])
 	pb.drawBeam(fitsHeader,ax)
@@ -52,6 +45,7 @@ def prettifyPlot(xlabel,ylabel):
 	plt.tick_params(which='major', length=8, direction='in') #If you want tick marks on the opposite side also, add right=True
 	plt.tick_params(which='minor', length=4)
 
-plotFits('data/HZ7_mom_mask2.integrated.fits')
-plotFits('data/HZ7_mom_mask2.weighted_coord.fits')
-plotFits('data/HZ7_mom_mask2.weighted_dispersion_coord.fits')
+if __name__ == '__main__':
+	plotFits('data/HZ7_Collapsed.fits')
+	plotFits('data/HZ7_mom_mask2.weighted_coord.fits')
+	plotFits('data/HZ7_mom_mask2.weighted_dispersion_coord.fits')

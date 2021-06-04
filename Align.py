@@ -14,8 +14,30 @@ from astropy.wcs import WCS
 from scipy.stats import norm
 from astropy.modeling import models, fitting
 from scipy.optimize import curve_fit
-import astroalign as aa
-from pynput.keyboard import Key, Listener
+from astroquery.gaia import Gaia
+import astropy.units as u 
+from astropy.coordinates import SkyCoord
+
+def searchGaiaArchives(ra,dec,height,width):
+	coord = SkyCoord(ra = ra*u.deg, dec=dec*u.deg)
+	width = u.Quantity(width*u.deg)
+	height = u.Quantity(height*u.deg)
+	results = Gaia.query_object_async(coordinate=coord, width=width, height=height)
+	return np.array(list(results['ra'])), np.array(list(results['dec']))
+
+def getFitsCenter(hdu):
+	localWCS = WCS(hdu.header)
+	y,x = hdu.shape
+	raCenter, decCenter = localWCS.pixel_to_world_values(x/2,y/2)
+	return float(raCenter), float(decCenter)
+
+def getFitsDimensions(hdu):
+	localWCS = WCS(hdu.header)
+	pixHeight, pixWidth = hdu.data.shape
+	xPixels = np.array([0,0,pixWidth,pixWidth])
+	yPixels = np.array([0,pixHeight,0,pixHeight])
+	raPixels,decPixels = localWCS.pixel_to_world_values(xPixels,yPixels)
+	return np.abs(raPixels[0] - raPixels[2]), np.abs(decPixels[0]- decPixels[1])
 
 def locateImageHDUValue(hdulist):
 	for i in range(len(hdulist)):
@@ -93,7 +115,6 @@ class AlignmentDuo:
 		self.plotSideBySide()
 		self.generateWorldCoordinates()
 		self.calculateXYOffset()
-		#self.calculateTransformationMatrix()
 
 	def plotSideBySide(self):
 		self.coords1 = []
@@ -151,16 +172,10 @@ class AlignmentDuo:
 		self.HSTImage2Header['CRVAL2'] = self.HSTImage2Header['CRVAL2'] + self.decOffset
 		self.hdulist2.writeto(outputFileName,overwrite=True)
 
-	'''def calculateTransformationMatrix(self):
-		source = makeTupples(self.worldCoordinates1[0],self.worldCoordinates1[1])    
-		target = makeTupples(self.worldCoordinates2[0],self.worldCoordinates2[1])
-		self.transformationMatrix = aa.estimate_transform('affine',source,target)'''
-
-
 
 
 class GaiaAlignment:
-	def __init__(self, inputFile, gaiaFile):
+	def __init__(self, inputFile):
 		self.hdulist = fits.open(inputFile)
 		hduValue = locateImageHDUValue(self.hdulist)
 		self.hdu = self.hdulist[hduValue]
@@ -168,7 +183,10 @@ class GaiaAlignment:
 		self.hduData = self.hdu.data 
 		self.wcs = WCS(self.hduHeader)
 
-		self.gaiaRA, self.gaiaDec = np.loadtxt(gaiaFile,unpack=True,delimiter=',',skiprows=1)
+
+		centerRa,centerDec = getFitsCenter(self.hdu)
+		width,height = getFitsDimensions(self.hdu)
+		self.gaiaRA, self.gaiaDec = searchGaiaArchives(centerRa,centerDec,height,width)
 		self.gaiaX, self.gaiaY = self.wcs.world_to_pixel_values(self.gaiaRA,self.gaiaDec)
 
 		self.plotImage()
@@ -184,8 +202,8 @@ class GaiaAlignment:
 		ax = fig.add_subplot()
 		limits = interval.get_limits(self.hduData)	
 		ax.imshow(self.hduData, cmap='Greys', origin='lower',interpolation='nearest',vmin=limits[0],vmax=limits[1])
-		ax.set_xlim(0,len(self.hduData[1]))
-		ax.set_ylim(0,len(self.hduData[0]))
+		#ax.set_xlim(0,len(self.hduData[1]))
+		#ax.set_ylim(0,len(self.hduData[0]))
 		ax.scatter(self.gaiaX,self.gaiaY,marker='*',s=100,facecolors='none',edgecolors='cyan')
 
 		def onclick(event):
@@ -240,7 +258,7 @@ if __name__ == '__main__':
 	infiles = [infile1,infile2,infile3,infile4]
 
 	for infile in infiles:
-		ga = GaiaAlignment(infile,'data/gaiaSources.txt')
+		ga = GaiaAlignment(infile)
 		ga.applySimpleCorrection('data/ASCImages/gaiacorrected/' + infile.split('/')[-1].split('.fit')[0] + '_gaia_corrected.fits')
 
 

@@ -66,105 +66,9 @@ def sum_region(center,radius_min,radius_max,data_array,error=False):
 	elif error == True:
 		return sum_val,annuli_area,sigma_val*(np.sqrt(annuli_area/AreaBeam))/annuli_area
 
-'''def sum_region(center,radius_min,radius_max,data_array,error=False):
-	xs = []
-	ys = []
-	for i in range(len(data_array)):
-		for j in range(len(data_array[0])):
-			xs.append(i)
-			ys.append(j)
-	xs = np.array(xs)
-	ys = np.array(ys)
-	rs = np.sqrt((center[0]-xs)**2+(center[1]-ys)**2)
-	cut = np.where((rs<=radius_max) & (rs>=radius_min))[0]
-	xs = xs[cut]
-	ys = ys[cut]
-	rs = rs[cut]
-
-	val = []
-	for i in range(len(xs)):
-		val.append(data_array[ys[i]][xs[i]])
-
-	sum_val = np.nansum(val)
-	annuli_area = len(xs)*arcsec_area
-	print(annuli_area)
-
-	if error==False:
-		return sum_val, len(xs)*arcsec_area
-	elif error == True:
-		print('FUCK ANNULU',annuli_area)
-		print('FUCK SIGMA_VAL: ', val)
-		return sum_val,annuli_area,np.std(val)/annuli_area#*sigma_val*(np.sqrt(annuli_area/AreaBeam))/annuli_area'''
-
-def calc_rms(center,radius_min,radius_max,data_array):
-	xs = []
-	ys = []
-	for i in range(len(data_array)):
-		for j in range(len(data_array[0])):
-			xs.append(i)
-			ys.append(j)
-	xs = np.array(xs)
-	ys = np.array(ys)
-	rs = np.sqrt((center[0]-xs)**2+(center[1]-ys)**2)
-	cut = np.where((rs<=radius_max) & (rs>=radius_min))[0]
-	xs = xs[cut]
-	ys = ys[cut]
-	rs = rs[cut]
-
-	val = []
-	for i in range(len(xs)):
-		val.append(data_array[ys[i]][xs[i]])
-
-	rms = np.nanstd(val)
-	return rms 
-
-
-def get_xyz(image_data):
-	x,y,z = [],[],[]
-	for i in range(len(image_data)):
-		for j in range(len(image_data[0])):
-			z.append(image_data[i][j])
-			x.append(j)
-			y.append(i)
-	return np.array(x),np.array(y),np.array(z)
-
-def make_hist_xy(image_data,method='sum'):
-	x,y,z = get_xyz(image_data)
-	unique_x,unique_y = np.unique(x),np.unique(y)
-	x_vals,y_vals = [],[]
-	 
-	for x_val in unique_x:
-		print('HERE')
-		cut = np.where(x==x_val)[0]
-		x_vals.append(z[cut])
-
-	for y_val in unique_y:
-		cut = np.where(y==y_val)[0]
-		y_vals.append(z[cut])
-
-	if method=='sum':
-		final_x = np.array([np.nansum(x_val) for x_val in x_vals])
-		final_y = np.array([np.nansum(y_val) for y_val in y_vals])
-	
-	elif method=='mean':
-		final_x = np.array([np.nanmean(x_val) for x_val in x_vals])
-		final_y = np.array([np.nanmean(y_val) for y_val in y_vals])
-
-	elif method=='max':
-		final_x = np.array([np.max(x_val) for x_val in x_vals])
-		final_y = np.array([np.max(y_val) for y_val in y_vals])
-	
-	else:
-		print('Method choice is incorrect. Use "sum", "mean", or "max"')
-
-	return unique_x,final_x,unique_y,final_y
-
-
-#infile = 'hz7_full_mom0.fits'
-#for value in tqdm(range(1,17)):
 
 value=0
-infile = 'data/moment0.fits'
+infile = 'data/HZ7_Collapsed.fits'
 moment0 = fits.open(infile)
 data = moment0[0].data[0][0]   # open file and strip data into the file
 header = moment0[0].header
@@ -197,9 +101,6 @@ radii_arcsec = radiis*arcsec_per_pixel  														# converting radiis into a
 plotting_radiis_arcsec = plotting_radiis*arcsec_per_pixel
 
 center_pix = (155,139)
-#center_pix = (148,135)
-#center_pix = (49,40)
-#center_pix = (len(data)/2,len(data[0])/2)    # define where we center the expansion
 
 wcs = WCS(moment0[0].header,naxis=2)  					# getting the world co-ordinate system  (for plotting mostly)
 center_pix_world = wcs.wcs_pix2world([center_pix],0)    # getting the wcs of the center pixels
@@ -352,12 +253,13 @@ def sum_region(center,radius_min,radius_max,data_array,error=False):
 
  #################################### Preparing the different filters ##################################################
 
+prefix = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/gaiacorrected/'
+filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits',
+			'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits',
+			'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits',
+			'hst_13641_07_wfc3_ir_total_sci_gaia_corrected.fits']
 
-filters =['gaia_corrected_rescaled_acs.fits',
-  'resampled_gaia_corrected_hst_13641_07_wfc3_ir_f105w_sci (1).fits',
-  'resampled_gaia_corrected_hst_13641_07_wfc3_ir_f160w_sci (1).fits',
-  'resampled_gaia_corrected_hst_13641_07_wfc3_ir_f125w_sci.fits',
-  'resampled_gaia_corrected_hst_13641_07_wfc3_ir_total_sci.fits']
+filters = [prefix+filt for filt in filters]
 
 colors = ['g','r','m','c','y']
 labels = ['ACS','105w','160w','125w','total']
@@ -377,14 +279,15 @@ f.close()
 
 ### Looping over all the filters ###
 for filt in filters:
+	print(filt)
 	infile = filt
 	moment0 = fits.open(infile)
-	data = moment0[0].data   # open file and strip data into the file
+	data = moment0[1].data   # open file and strip data into the file
 	if filt != 'gaia_corrected_rescaled_acs.fits':
 		data = data/2.5    # divide by the gain to get counts per second. 
-	header = moment0[0].header
-	PixSize = header['CDELT2']*3600
-	degree_per_pixel = np.abs(float(moment0[0].header['CDELT1']))   # figure out the degrees per pixel from the headers 
+	header = moment0[1].header
+	PixSize = header['CD2_2']*3600
+	degree_per_pixel = np.abs(float(moment0[1].header['CD2_2']))   # figure out the degrees per pixel from the headers 
 	wcs = WCS(moment0[0].header,naxis=2)  
 	arcsec_per_pixel = degree_per_pixel*3600  						# convert to arcseconds per pixel 
 	arcsec_area = arcsec_per_pixel**2  # area of a single pixel     # work out the area per pixel in square arcseconds
@@ -518,8 +421,6 @@ for filt in filters:
 	print('Sersic Best Fit: ')
 	print(popt)
 
-
-	
 
 	sers_x = np.linspace(0,2,1000)
 	popt,pcov = curve_fit(sersic,plotting_radiis_arcsec,vals)

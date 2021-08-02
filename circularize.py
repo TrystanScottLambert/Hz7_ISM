@@ -49,7 +49,7 @@ def prettifyPlot(xlabel,ylabel):
 	plt.tick_params(which='major', length=8, direction='in') #If you want tick marks on the opposite side also, add right=True
 	plt.tick_params(which='minor', length=4)
 
-infile = 'HZ7_local_restfrq.fits'
+infile = 'data/HZ7_Centered.fits'
 hdu = fits.open(infile)
 hdu = hdu[0]
 
@@ -74,11 +74,11 @@ x = np.arange(len(data[0]))
 _,_,freqs = wcsCube.pixel_to_world_values(x,x,x)
 vels = 300000*((-freqs + restFrequency)/restFrequency)
 
-for i in range(7):
+'''for i in range(7):
 	f = open(f'nice_circle{i+1}.txt','w')
 	for j in range(len(x)):
 		f.write(f'{vels[j]} {fluxes[i][j]} \n')
-	f.close()
+	f.close()'''
 
 #####################################################################################
 infiles = []
@@ -126,7 +126,7 @@ rainbowColorMapValue = plt.get_cmap('rainbow')
 colors = rainbowColorMapValue(norm(means))
 
 # reading in the moment map
-infile = 'moment_0.fits'
+infile = 'data/HZ7_Collapsed.fits'
 #infile = 'HZ7_mom_includepix.weighted_coord.fits'
 #infile =  'HZ7_mom_mask2.weighted_coord.fits'
 

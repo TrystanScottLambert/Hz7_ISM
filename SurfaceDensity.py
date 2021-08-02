@@ -5,6 +5,11 @@
 # 
 ############################
 
+# To do: 
+# Make sure the fitting routine is acceptable
+# Uncertainties of the actual parameters. 
+# (possible mcmc for uncertainties)
+
 # import packages
 import numpy as np 
 import pylab as plt
@@ -27,6 +32,7 @@ def log_uncertainty(value,uncertainty):
 
 # from the rms region in CASA
 sigma_val = 6.1493023326e-05
+sigma_val = 2.3e-2
 
 
 # sersic profile 
@@ -132,7 +138,7 @@ new_radiis = np.array(new_radiis)
 new_radiis_arc = new_radiis*arcsec_per_pixel
 
 vals = sums/areas
-vals_uncertainties = uncertainties/areas
+vals_uncertainties = uncertainties#/areas
 
 full_gauss_radii = np.append(-1*new_radiis_arc[::-1],new_radiis_arc)
 full_gauss_vals = np.append(vals[::-1],vals)
@@ -218,6 +224,7 @@ print(popt)
 
 # from the rms region in CASA
 sigma_val = 0.002128163
+EXPTIME = 4056. # exposure time in seconds. 
 
 def sum_region(center,radius_min,radius_max,data_array,error=False):
 	xs = []
@@ -245,7 +252,7 @@ def sum_region(center,radius_min,radius_max,data_array,error=False):
 	if error==False:
 		return sum_val, len(xs)*arcsec_area
 	elif error == True:
-		return sum_val,annuli_area,np.sqrt(np.power(sigma_val*np.sqrt(len(val)),2) + (sum_val/4056.))/annuli_area #
+		return sum_val,annuli_area,np.sqrt(np.power(sigma_val*np.sqrt(len(val)),2) + (sum_val/EXPTIME))/annuli_area #
 		#return sum_val,annuli_area,sigma_val*np.sqrt(len(val))/annuli_area
 
 
@@ -253,11 +260,11 @@ def sum_region(center,radius_min,radius_max,data_array,error=False):
 
  #################################### Preparing the different filters ##################################################
 
-prefix = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/gaiacorrected/'
-filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits',
-			'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits',
-			'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits',
-			'hst_13641_07_wfc3_ir_total_sci_gaia_corrected.fits']
+prefix = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/deresolved/'
+filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_deresolved.fits',
+			'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected_deresolved.fits',
+			'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected_deresolved.fits',
+			'hst_13641_07_wfc3_ir_total_sci_gaia_corrected_deresolved.fits']
 
 filters = [prefix+filt for filt in filters]
 
@@ -282,12 +289,12 @@ for filt in filters:
 	print(filt)
 	infile = filt
 	moment0 = fits.open(infile)
-	data = moment0[1].data   # open file and strip data into the file
+	data = moment0[0].data   # open file and strip data into the file
 	if filt != 'gaia_corrected_rescaled_acs.fits':
 		data = data/2.5    # divide by the gain to get counts per second. 
-	header = moment0[1].header
-	PixSize = header['CD2_2']*3600
-	degree_per_pixel = np.abs(float(moment0[1].header['CD2_2']))   # figure out the degrees per pixel from the headers 
+	header = moment0[0].header
+	PixSize = header['CDELT2']*3600
+	degree_per_pixel = np.abs(float(moment0[0].header['CDELT2']))   # figure out the degrees per pixel from the headers 
 	wcs = WCS(moment0[0].header,naxis=2)  
 	arcsec_per_pixel = degree_per_pixel*3600  						# convert to arcseconds per pixel 
 	arcsec_area = arcsec_per_pixel**2  # area of a single pixel     # work out the area per pixel in square arcseconds
@@ -342,7 +349,7 @@ for filt in filters:
 	new_radiis_arc = new_radiis*arcsec_per_pixel
 
 	vals = sums/areas
-	vals_uncertainties = uncertainties/areas
+	vals_uncertainties = uncertainties#/areas
 	if filt != 'gaia_corrected_rescaled_acs.fits':
 		vals = vals - np.min(vals)
 		vals_uncertainties = vals_uncertainties - np.min(vals)

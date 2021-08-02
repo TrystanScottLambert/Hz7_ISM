@@ -58,11 +58,10 @@ class RadioCube:
 
 		val = []
 		for i in range(len(xs)):
-			val.append(self.data[ys[i]][xs[i]])
+			val.append(self.beamCorrectedData[ys[i]][xs[i]])
 
 		sumVal = np.nansum(val)
 		annuliArea = len(xs)*self.arcsecondAreaPerPixel
-		print(annuliArea)
 
 		if error==False:
 			return sumVal, len(xs)*arcsecArea
@@ -78,10 +77,10 @@ class RadioCube:
 			sums.append(currentSum)
 			areas.append(currentArea)
 			uncertainties.append(currentUncertainty) 
-		return sums,areas,uncertainties
+		return np.array(sums),np.array(areas),np.array(uncertainties)
 
 
 if __name__ == '__main__':
 	infile = 'data/HZ7_Collapsed.fits'
 	rc = RadioCube(infile)
-	rc.getSumAreaUncertainty((155,139),2,0.2,6.149e-5)
+	rc.getSumAreaUncertainty((155,139),2,0.2,6e-5)

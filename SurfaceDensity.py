@@ -44,6 +44,13 @@ def sersic(R, Ie, Re, m):
 def sersic1(R, Ie, Re):
 	return sersic(R,Ie,Re,1)
 
+def gaussianFunction(x, a, x0, sigma, c):
+    return a*np.exp(-(x-x0)**2/(2*sigma**2)) + c
+
+def twoGaussianFunctions(x, a1, x01, sigma1, a2, x02, sigma2, c):
+    return a1*np.exp(-(x-x01)**2/(2*sigma1**2)) + a2*np.exp(-(x-x02)**2/(2*sigma2**2)) +c
+
+
 def sum_region(center,radius_min,radius_max,data_array,error=False):
 	xs = []
 	ys = []
@@ -93,7 +100,7 @@ arcsec_area = arcsec_per_pixel**2  # area of a single pixel     # work out the a
 circles=[]
 binwidth_pix_arc = 0.259999999
 max_arc = 2.079999999
-binwidth_pix_arc = 0.2
+binwidth_pix_arc = 0.1
 max_arc = 1.8
 
 binwidth_pix = round(binwidth_pix_arc/arcsec_per_pixel)#10#10
@@ -130,7 +137,10 @@ for i in range(len(radiis)-1):
 	sums.append(current_sum)
 	areas.append(current_area)
 	uncertainties.append(current_uncertainty)
-	new_radiis.append((radiis[i+1]+radiis[i])/2)
+	if i == 0:
+		new_radiis.append(0)
+	else:
+		new_radiis.append((radiis[i+1]+radiis[i])/2)
 areas = np.array(areas)
 sums = np.array(sums)
 uncertainties = np.array(uncertainties)
@@ -140,10 +150,12 @@ new_radiis_arc = new_radiis*arcsec_per_pixel
 vals = sums/areas
 vals_uncertainties = uncertainties#/areas
 
-full_gauss_radii = np.append(-1*new_radiis_arc[::-1],new_radiis_arc)
-full_gauss_vals = np.append(vals[::-1],vals)
-full_guass_vals_uncertainties = np.append(vals_uncertainties[::-1],vals_uncertainties)
+full_gauss_radii = np.append(-1*new_radiis_arc[::-1][:-1],new_radiis_arc)
+full_gauss_vals = np.append(vals[::-1][:-1],vals)
+full_guass_vals_uncertainties = np.append(vals_uncertainties[::-1][:-1],vals_uncertainties)
 
+offset = np.mean(full_gauss_vals[:2])
+full_gauss_vals = full_gauss_vals - offset
 
 ax1 = fig.add_subplot(122)
 ax1.errorbar(full_gauss_radii,full_gauss_vals,yerr=full_guass_vals_uncertainties,fmt='ro',lw=3)
@@ -158,12 +170,58 @@ ax1.tick_params(which='minor', length=4, direction='in')
 ax1.grid()
 
 
+def fitFunction(function,xData,yData,yUncertainty,nstd=3):
+	popt,pcov = curve_fit(function,xData,yData,sigma=yUncertainty)
+	perr = np.sqrt(np.diag(pcov))
+	poptUp = popt + nstd * perr 
+	poptDown = popt - nstd * perr
+	return popt,pcov,perr,poptUp,poptDown
+
+popt,pcov,perr,popt_up,popt_dw = fitFunction(gaussianFunction,full_gauss_radii,full_gauss_vals,full_guass_vals_uncertainties,3)
+
+x = np.linspace(-2,2,1000)  
+fit = gaussianFunction(x, *popt)
+fit_up = gaussianFunction(x, *popt_up)
+fit_dw = gaussianFunction(x, *popt_dw)
+plt.plot(x,fit)
+plt.fill_between(x,fit_up,fit_dw,alpha=2.5)
+plt.xlim(left=0)
+plt.show()
+
+
+x = np.linspace(0,2,1000)
+nstd = 1
+popt,pcov,perr,popt_up,popt_dw = fitFunction(sersic,new_radiis_arc,vals,vals_uncertainties,nstd)
+popt1,pcov1,perr1,popt_up1,popt_dw1 = fitFunction(sersic1,new_radiis_arc,vals,vals_uncertainties,nstd)
+
+plt.errorbar(new_radiis_arc,vals,yerr=vals_uncertainties,fmt='ro',label='Data')
+plt.plot(x,sersic(x,*popt),label=r'Sersic free "$m$" parameter')
+plt.plot(x,sersic1(x,*popt1),lw=2,color='k',label=r'Sersic $m=1$')
+plt.fill_between(x,sersic(x,*popt_up),sersic(x,*popt_dw),alpha=0.25,label=f'{nstd}' + r'$\sigma$')
+plt.xlim(left=0)
+plt.xlabel('Radius ["]',fontsize=30)
+plt.ylabel(r'$\Sigma_{C_{II}}$/${\rm area}$',fontsize=30)
+plt.tick_params(axis='both',labelsize=20)
+plt.minorticks_on()
+plt.tick_params(which='both', width=2) #this has to be a separate line because width can't be set when using which='minor'
+plt.tick_params(which='major', length=8, direction='in') #If you want tick marks on the opposite side also, add right=True
+plt.tick_params(which='minor', length=4, direction='in')
+plt.legend()
+plt.show()
+
+
+
+############ KILL ################
+
+for i in penis:
+	print(poes)
+
 fitter = modeling.fitting.LevMarLSQFitter()
 model = modeling.models.Gaussian1D(amplitude=np.max(vals),mean=0.0,stddev=0.2)  #note using the mean and standed deviation of the redshifts. 
 fitted_model = fitter(model,full_gauss_radii,full_gauss_vals)
 gauss_1d_aic = aic.aic(full_gauss_vals,fitted_model(full_gauss_radii),3)   # work out the aic score for the fitted model
 
-gg_init = modeling.models.Gaussian1D(amplitude=np.max(vals), mean=0., stddev=0.2) + modeling.models.Gaussian1D(amplitude=np.max(vals), mean=0., stddev=0.2)
+gg_init = modeling.models.Gaussian1D(amplitude=np.max(vals), mean=0., stddev=0.2) + modeling.models.Gaussian1D(amplitude=np.max(vals)/2, mean=0., stddev=0.2)
 fitter = modeling.fitting.SLSQPLSQFitter()
 gg_fit = fitter(gg_init, full_gauss_radii, full_gauss_vals)
 gauss_2d_aic = aic.aic(full_gauss_vals,gg_fit(full_gauss_radii),6)
@@ -206,6 +264,8 @@ plt.show()
 
 sers_x_c, popt_c, popt1_c = sers_x, popt, popt1
 CII_radii, CII_vals, CII_undertainties = full_gauss_radii, full_gauss_vals, full_guass_vals_uncertainties
+
+############### KILL #################
 
 ############ Reading in the UV image #####################
 

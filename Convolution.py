@@ -4,6 +4,8 @@
 #
 ################################################################
 
+#If they are Gaussian PSFs, you take sigma_best and sigma_worst and you convolve the image with PSF sigma_best with a Gaussian kernel of width sigma = (sigma_worst**2-sigma_best**2)**0.5
+
 import numpy as np 
 import pylab as plt
 from astropy.io import fits 
@@ -83,3 +85,5 @@ if __name__ == '__main__':
 
 	for infile in tqdm(infiles):
 		generateConvolvedImages(infile,radioFile,infile.split('gaiacorrected/')[0]+'convolved/'+infile.split('gaiacorrected/')[1].split('.fits')[0]+'_convolved.fits','TEST_RADIO_CONVOLVED.fits')
+
+	

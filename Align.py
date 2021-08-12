@@ -264,7 +264,7 @@ if __name__ == '__main__':
 
 
 ###############################################################################################################################################
-gaiaFile = 'data/gaiaSources.txt' # location and name of your gaia sources (https://gea.esac.esa.int/archive/). Save as csv. 
+'''gaiaFile = 'data/gaiaSources.txt' # location and name of your gaia sources (https://gea.esac.esa.int/archive/). Save as csv. 
 raGaia, decGaia = np.loadtxt(gaiaFile,unpack=True,delimiter=',',skiprows=1)
 
 
@@ -313,7 +313,6 @@ for star in stars:
 	columnPopt = gaussFit(xValues,columnSum)
 	rowPopt = gaussFit(xValues,rowSum)
 
-
 	# start with a square Figure
 	fig = plt.figure(figsize=(8, 8))
 	gs = fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7), left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05)
@@ -339,4 +338,4 @@ for star in stars:
 	ax_y.axhline(rowPopt[2],ls=':',color='k')
 
 
-plt.show()
+plt.show()'''

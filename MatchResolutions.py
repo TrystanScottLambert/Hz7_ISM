@@ -16,12 +16,12 @@ ALMASpectralCube = SpectralCube.read(ALMAFitsFile)
 ALMAWCS = WCS(ALMASpectralCube.header,naxis=2)
 
 
-ASCFiles = ['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits',  
-				'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits',  
-				'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits', 
-				'hst_13641_07_wfc3_ir_total_sci_gaia_corrected.fits']
+ASCFiles = ['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved.fits',
+				'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected_convolved.fits',
+				'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected_convolved.fits',
+				'hst_13641_07_wfc3_ir_total_sci_gaia_corrected_convolved.fits']
 
-ASCDirectory = 'data/ASCImages/gaiacorrected/'
+ASCDirectory = 'data/ASCImages/convolved/'
 
 
 for file in ASCFiles:

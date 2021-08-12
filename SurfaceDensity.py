@@ -328,10 +328,10 @@ def sum_region(center,radius_min,radius_max,data_array,error=False):
  #################################### Preparing the different filters ##################################################
 
 prefix = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/deresolved/'
-filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_deresolved.fits',
-			'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected_deresolved.fits',
-			'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected_deresolved.fits',
-			'hst_13641_07_wfc3_ir_total_sci_gaia_corrected_deresolved.fits']
+filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved_deresolved.fits',
+			'hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected_convolved_deresolved.fits',
+			'hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected_convolved_deresolved.fits',
+			'hst_13641_07_wfc3_ir_total_sci_gaia_corrected_convolved_deresolved.fits']
 
 filters = [prefix+filt for filt in filters]
 

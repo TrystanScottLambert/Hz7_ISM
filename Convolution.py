@@ -4,10 +4,10 @@
 #
 ################################################################
 
-#If they are Gaussian PSFs, you take sigma_best and sigma_worst and you convolve the image with PSF sigma_best with a Gaussian kernel of width sigma = (sigma_worst**2-sigma_best**2)**0.5
+# From Roberto
+# If they are Gaussian PSFs, you take sigma_best and sigma_worst and you convolve the image with PSF sigma_best with a Gaussian kernel of width sigma = (sigma_worst**2-sigma_best**2)**0.5
 
 import numpy as np 
-import pylab as plt
 from astropy.io import fits 
 from astropy.convolution import Gaussian2DKernel 
 from astropy.convolution import convolve, convolve_fft
@@ -45,26 +45,26 @@ class RadioImage(HSTImage):
 
 def convolveImages(HSTImageObject,radioImageObject):
 	FWHMconst = 2.355
-	fwhm_HST_arcsec = 0.18 # how do we get this
+	fwhmHSTArcSec = 0.18 
 
-	sigma_HST_pix_in_ALMA = (fwhm_HST_arcsec/FWHMconst)/(radioImageObject.pixScaleArcSec)
-	sigma_HST_pix_in_HST = (fwhm_HST_arcsec/FWHMconst)/(HSTImageObject.pixScaleArcSec)
+	sigmaHSTPixInALMA = (fwhmHSTArcSec/FWHMconst)/(radioImageObject.pixScaleArcSec)
+	sigmaHSTPixInHST = (fwhmHSTArcSec/FWHMconst)/(HSTImageObject.pixScaleArcSec)
 
-	sigma_maj_ALMA_pix_in_HST = (radioImageObject.bmajArcSec/FWHMconst)/HSTImageObject.pixScaleArcSec
-	sigma_min_ALMA_pix_in_HST = (radioImageObject.bminArcSec/FWHMconst)/HSTImageObject.pixScaleArcSec
-	theta_ALMA_degree = radioImageObject.bpa
+	sigmaMajALMAPixInHST = (radioImageObject.bmajArcSec/FWHMconst)/HSTImageObject.pixScaleArcSec
+	sigmaMinALMAPixInHST = (radioImageObject.bminArcSec/FWHMconst)/HSTImageObject.pixScaleArcSec
+	thetaALMADegree = radioImageObject.bpa
 
-	sigma_maj_ALMA_pix_in_ALMA = (radioImageObject.bmajArcSec/FWHMconst)/radioImageObject.pixScaleArcSec
-	sigma_min_ALMA_pix_in_ALMA = (radioImageObject.bmajArcSec/FWHMconst)/radioImageObject.pixScaleArcSec
+	sigmaMajALMAPixInALMA = (radioImageObject.bmajArcSec/FWHMconst)/radioImageObject.pixScaleArcSec
+	sigmaMinALMAPixInALMA = (radioImageObject.bmajArcSec/FWHMconst)/radioImageObject.pixScaleArcSec
 
-	beam_ALMA_in_HST = Gaussian2DKernel(x_stddev = sigma_maj_ALMA_pix_in_HST, y_stddev=sigma_min_ALMA_pix_in_HST, theta = ((theta_ALMA_degree +90) * np.pi)/180,x_size = HSTImageObject.imageSize[0],y_size = HSTImageObject.imageSize[1])
-	beam_ALMA_in_ALMA= Gaussian2DKernel(x_stddev = sigma_maj_ALMA_pix_in_ALMA, y_stddev=sigma_min_ALMA_pix_in_ALMA, theta = ((theta_ALMA_degree +90) * np.pi)/180,x_size = radioImageObject.imageSize[0],y_size = radioImageObject.imageSize[1])
+	beamALMAInHST = Gaussian2DKernel(x_stddev = sigmaMajALMAPixInHST, y_stddev=sigmaMinALMAPixInHST, theta = ((thetaALMADegree +90) * np.pi)/180,x_size = HSTImageObject.imageSize[0],y_size = HSTImageObject.imageSize[1])
+	beamALMAInALMA= Gaussian2DKernel(x_stddev = sigmaMajALMAPixInALMA, y_stddev=sigmaMinALMAPixInALMA, theta = ((thetaALMADegree +90) * np.pi)/180,x_size = radioImageObject.imageSize[0],y_size = radioImageObject.imageSize[1])
 	
-	psf_HST_in_ALMA = Gaussian2DKernel(x_stddev = sigma_HST_pix_in_ALMA, y_stddev=sigma_HST_pix_in_ALMA, theta = 0, x_size = radioImageObject.imageSize[0], y_size = radioImageObject.imageSize[1])
-	psf_HST_in_HST = Gaussian2DKernel(x_stddev = sigma_HST_pix_in_HST, y_stddev=sigma_HST_pix_in_HST, theta = 0, x_size = HSTImageObject.imageSize[0], y_size = HSTImageObject.imageSize[1] )
+	psfHSTInALMA = Gaussian2DKernel(x_stddev = sigmaHSTPixInALMA, y_stddev=sigmaHSTPixInALMA, theta = 0, x_size = radioImageObject.imageSize[0], y_size = radioImageObject.imageSize[1])
+	psfHSTInHST = Gaussian2DKernel(x_stddev = sigmaHSTPixInHST, y_stddev=sigmaHSTPixInHST, theta = 0, x_size = HSTImageObject.imageSize[0], y_size = HSTImageObject.imageSize[1] )
 
-	convolvedUV = convolve_fft(HSTImageObject.data,beam_ALMA_in_HST,allow_huge=True)
-	convolvedALMA = convolve_fft(radioImageObject.data,psf_HST_in_ALMA,allow_huge=True)
+	convolvedUV = convolve_fft(HSTImageObject.data,beamALMAInHST,allow_huge=True)
+	convolvedALMA = convolve_fft(radioImageObject.data,psfHSTInALMA,allow_huge=True)
 
 	return convolvedUV, convolvedALMA
 

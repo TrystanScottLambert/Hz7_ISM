@@ -22,8 +22,8 @@ infiles= ['data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corr
 			'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits',
 			'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits']
 
-imageData = [fits.open(infile)[1].data for infile in infiles]
-imageHeader = fits.open(infiles[0])[1].header
+imageData = [fits.open(infile)[0].data for infile in infiles]
+imageHeader = fits.open(infiles[0])[0].header
 maskedCIIDetection = fits.open('data/HZ7_mom_mask2.integrated.fits')
 rms_val = 2.3e-2 * 1e3
 levels = np.arange(1,5)*rms_val

@@ -29,12 +29,10 @@ def setCenters(center,radius):
 		centers.append((2*radius*np.cos((i*np.pi)/3)+center[0],2*radius*np.sin((i*np.pi)/3)+center[1]))
 	return centers
 
-
 def getCircularApetures(center,radius):
 	positions = setCenters(center,radius)
 	apetures = [CircularAperture(pos,r=radius) for pos in positions]
 	return apetures
-
 
 def getCirclePlottingInformation(positions,radius):
 	x = np.array([pos[0] for pos in positions])
@@ -50,7 +48,6 @@ def prettifyPlot(xlabel,ylabel):
 	plt.tick_params(which='both', width=2,direction='in') #this has to be a separate line because width can't be set when using which='minor'
 	plt.tick_params(which='major', length=8, direction='in') #If you want tick marks on the opposite side also, add right=True
 	plt.tick_params(which='minor', length=4)
-
 
 infile = 'data/HZ7_Collapsed.fits'
 hdu = fits.open(infile)
@@ -118,7 +115,7 @@ plt.errorbar(np.arange(len(fluxes)),fluxes,yerr=fluxErrors,fmt='or')
 plt.show()
 
 
-infile = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/deresolved/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_deresolved.fits'
+infile = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/deresolved/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved_deresolved.fits'
 hdu = fits.open(infile)
 hdu = hdu[0]
 data = hdu.data

@@ -15,6 +15,8 @@ from astropy.wcs import WCS
 from astropy import modeling
 import matplotlib
 from scipy.optimize import curve_fit
+import os
+
 matplotlib.rcParams.update({'font.size': 20})   #Always run this line just to have tick mark sizes looking good. 
 
 def gaussianFunction(x, a, x0, sigma):
@@ -74,11 +76,11 @@ x = np.arange(len(data[0]))
 _,_,freqs = wcsCube.pixel_to_world_values(x,x,x)
 vels = 300000*((-freqs + restFrequency)/restFrequency)
 
-'''for i in range(7):
+for i in range(7):
 	f = open(f'nice_circle{i+1}.txt','w')
 	for j in range(len(x)):
 		f.write(f'{vels[j]} {fluxes[i][j]} \n')
-	f.close()'''
+	f.close()
 
 #####################################################################################
 infiles = []
@@ -163,3 +165,5 @@ plt.show()
 plt.errorbar(np.arange(len(fwhms))+1,fwhms,yerr=fwhmsErrors,fmt='o')
 prettifyPlot('Ring','FWHMS')
 plt.show()
+
+os.system('rm nice_circle*.txt') # tear down temp files.

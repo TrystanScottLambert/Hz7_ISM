@@ -202,8 +202,8 @@ poptCII,pcovCII,perrCII,popt_upCII,popt_dwCII = fitFunction(sersic,new_radiis_ar
 popt1,pcov1,perr1,popt_up1,popt_dw1 = fitFunction(sersic1,new_radiis_arc,vals,vals_uncertainties,nstd)
 
 plt.errorbar(new_radiis_arc,vals,yerr=vals_uncertainties,fmt='ro',label='Data')
-plt.plot(x,sersic(x,*poptCII),label=r'Free $m$, ' + r'$R_{e} = $'f'{round(poptCII[1],4)}')
-plt.plot(x,sersic1(x,*popt1),lw=2,color='k',label=r'$m=1$, $R_{e}$ = ' + f'{round(popt1[1],4)}')
+plt.plot(x,sersic(x,*poptCII),label=r'$n = $'+f'{round(poptCII[-1],2)} ' + r'$R_{e} = $'f'{round(poptCII[1],4)}')
+plt.plot(x,sersic1(x,*popt1),lw=2,color='k',label=r'$n=1$, $R_{e}$ = ' + f'{round(popt1[1],4)}')
 plt.fill_between(x,sersic(x,*popt_upCII),sersic(x,*popt_dwCII),alpha=0.25,label=f'{nstd}' + r'$\sigma$')
 plt.xlim(left=0)
 plt.xlabel('Radius ["]',fontsize=30)
@@ -336,7 +336,7 @@ filters =['hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved_deresolved.fi
 filters = [prefix+filt for filt in filters]
 
 colors = ['g','r','m','c','y']
-labels = ['ACS','105w','160w','125w','total']
+labels = ['ACS','F105W','F160W','F125W','total']
 value=0
 
 fig = plt.figure()
@@ -352,6 +352,7 @@ ax1 = fig.add_subplot(111)
 #f.close()
 
 ### Looping over all the filters ###
+averageRadii = []
 for filt in filters:
 	print(filt)
 	infile = filt
@@ -464,7 +465,7 @@ for filt in filters:
 	# Chose to plot n best fit of n = 1. 
 	#ax1.plot(sers_x,sersic1(sers_x,*popt1)/np.max(sersic1(sers_x,*popt1)),lw=3,color=colors[value],label=f'{labels[value]}, n = {1} \n reff = {round(popt1[1],3)}')
 	norm_factor = np.max(sersic(sers_x,*popt))
-	ax1.plot(sers_x,sersic(sers_x,*popt)/norm_factor,color=colors[value],lw=3,label=f'{labels[value]}, n = {round(popt[-1],3)} \n reff = {round(popt[1],3)}')
+	ax1.plot(sers_x,sersic(sers_x,*popt)/norm_factor,color=colors[value],lw=3,label=f'{labels[value]}, n = {round(popt[-1],3)} \n ' + r'$R_{e}$ = '+f'{round(popt[1],3)}')
 	ax1.errorbar(full_gauss_radii,full_gauss_vals/norm_factor,color=colors[value],yerr=full_guass_vals_uncertainties/norm_factor,fmt='o',lw=3)
 	sersic_aic = aic.aic(vals,sersic1(plotting_radiis_arcsec,*popt1),3)
 	if filt == 'resampled_gaia_corrected_hst_13641_07_wfc3_ir_f160w_sci (1).fits' :
@@ -477,11 +478,16 @@ for filt in filters:
 		f.close()
 
 	value+=1
+	averageRadii.append(popt[1])
+
+averageOpticalRadius = np.mean(averageRadii)
 
 norm_factor = np.max(sersic(sers_x,*poptCII))
-ax1.plot(sers_x,sersic(sers_x,*poptCII)/np.max(sersic(sers_x,*poptCII)),lw=4,color='k',label=r'Free $m$, ' + r'$R_{e} = $'f'{round(poptCII[1],4)}')
+ax1.plot(sers_x,sersic(sers_x,*poptCII)/np.max(sersic(sers_x,*poptCII)),lw=4,color='k',label='[CII] '+r'$n = $'+f'{round(poptCII[-1],2)} ' + r'$R_{e} = $'f'{round(poptCII[1],4)}')
 plt.fill_between(x,sersic(x,*popt_upCII)/norm_factor,sersic(x,*popt_dwCII)/norm_factor,alpha=0.25,label=f'{nstd}' + r'$\sigma$')
 ax1.set_xlim(left=0)
+ax1.axvline(poptCII[1],ls='--',color='k',lw=3,alpha=0.7)
+ax1.axvline(averageOpticalRadius,color='k',lw=2,alpha=0.5,ls='-.')
 ax1.set_xlabel('Radius ["]',fontsize=30)
 ax1.set_ylabel(r'Normalized $\Sigma$ flux/${\rm area}$',fontsize=30)
 ax1.tick_params(axis='both',labelsize=20)

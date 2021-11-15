@@ -19,9 +19,6 @@ import matplotlib
 from scipy.optimize import curve_fit
 matplotlib.rcParams.update({'font.size': 20})   #Always run this line just to have tick mark sizes looking good. 
 
-def gaussianFunction(x, a, x0, sigma):
-    return a*np.exp(-(x-x0)**2/(2*sigma**2))
-
 #function to work out a circular distribution of circles based on ra,dec and radius
 def setCenters(center,radius):
 	centers = [center]
@@ -109,10 +106,13 @@ for i in range(len(x)):
     ax.add_artist(currentCircle)
 
 prettifyPlot('RA','DEC')
+plt.xlim(x[0]-50,x[0]+50)
+plt.ylim(y[0]-50,y[0]+50)
 plt.show()
 
+plt.subplot(211)
 plt.errorbar(np.arange(len(fluxes)),fluxes,yerr=fluxErrors,fmt='or')
-plt.show()
+#plt.show()
 
 
 infile = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/deresolved/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved_deresolved.fits'
@@ -121,6 +121,28 @@ hdu = hdu[0]
 data = hdu.data
 wcs = WCS(hdu.header)
 
+plt.subplot(212)
 fluxes,fluxErrors,pixelCenter = calculateFluxes(data,WCS(hdu.header,naxis=2))
 plt.errorbar(np.arange(len(fluxes)),fluxes/arcsecAreaInAperture,yerr=fluxErrors/arcsecAreaInAperture,fmt='o')
 plt.show()
+
+
+
+positions = setCenters(pixelCenter,pixelRadius)
+x,y,r = getCirclePlottingInformation(positions,pixelRadius)
+
+
+fig = plt.figure()
+ax = fig.add_subplot(projection=wcs)
+im = ax.imshow(data,cmap='rainbow',vmin=0.3,vmax=0.5)
+
+for i in range(len(x)):
+    currentCircle = plt.Circle((x[i], y[i]), r[i], color = colors[i],fill=False,lw=3)
+    ax.text(x[i],y[i],str(i+1),size=20)
+    ax.add_artist(currentCircle)
+
+prettifyPlot('RA','DEC')
+plt.xlim(x[0]-50,x[0]+50)
+plt.ylim(y[0]-50,y[0]+50)
+plt.show()
+

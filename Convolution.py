@@ -85,5 +85,3 @@ if __name__ == '__main__':
 
 	for infile in tqdm(infiles):
 		generateConvolvedImages(infile,radioFile,infile.split('gaiacorrected/')[0]+'convolved/'+infile.split('gaiacorrected/')[1].split('.fits')[0]+'_convolved.fits','TEST_RADIO_CONVOLVED.fits')
-
-	

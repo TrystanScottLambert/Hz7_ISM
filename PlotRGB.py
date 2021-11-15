@@ -39,4 +39,5 @@ ax = fig.add_subplot(111,projection=hubbleWCS)
 plt.imshow(np.dstack([imageData[0],imageData[1],imageData[2]]),vmin=0.35,vmax=0.45)
 ax.contour(maskedCIIData[0][0], cmap='Greys_r', alpha=0.5, levels=levels,transform = ax.get_transform(ciiWCS))
 prettifyPlot('RA','Dec')
+
 plt.show()

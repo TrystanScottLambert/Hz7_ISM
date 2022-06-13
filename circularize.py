@@ -4,6 +4,7 @@
 #
 # Trystan Lambert 
 #
+# Not showing any good results
 ###########################################################
 
 import numpy as np 
@@ -144,14 +145,14 @@ im = ax.imshow(data,cmap='rainbow')
 
 positions = setCenters(pixelCenter,pixelRadius)
 x,y,r = getCirclePlottingInformation(positions,pixelRadius)
-sc = ax.scatter(x,y,c=means,cmap='rainbow',s=0)
+sc = ax.scatter(x,y,c=means,cmap='greys',s=0)
 fig.colorbar(im,ax=ax,label='km/s')
-
 for i in range(len(x)):
-    currentCircle = plt.Circle((x[i], y[i]), r[i], color = colors[i],fill=False,lw=3)
+    currentCircle = plt.Circle((x[i], y[i]), r[i], color = colors[i],fill=False,lw=5)
     ax.add_artist(currentCircle)
 
 prettifyPlot('RA','DEC')
+plt.savefig('Circular_Analysis.png',bbox_inches='tight',transparent=False)
 plt.show()
 
 plt.errorbar(np.arange(len(means))+1,means,yerr=meansErrors,fmt='o') 

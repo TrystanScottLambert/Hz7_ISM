@@ -14,25 +14,41 @@ from astropy.convolution import convolve, convolve_fft
 from astropy.wcs import WCS 
 from tqdm import tqdm
 
+def checkHDUNumberOfInterest(hduList):
+	hasData = False
+	for i in range(len(hduList)):
+		try:
+			len(hduList[i].data)
+			numberOfInterest = i 
+			hasData = True
+		except TypeError:
+			pass
+	if hasData:
+		return numberOfInterest
+	else:
+		print('NO DATA PRESENT')
+
 class HSTImage:
 	def __init__(self,filename):
 		self.hdu = fits.open(filename)
-		self.data = self.hdu[0].data 
-		self.header = self.hdu[0].header 
+		self.hduNumber = checkHDUNumberOfInterest(self.hdu)
+		self.data = self.hdu[self.hduNumber].data 
+		self.header = self.hdu[self.hduNumber].header 
 		self.wcs = WCS(self.header,naxis=2)
 		self.pixScaleDeg = self.header['CD2_2']
 		self.pixScaleArcSec = self.pixScaleDeg*3600
 		self.imageSize = self.data.shape
 
 	def writeConvolvedData(self,convolvedDataArray,newFileName):
-		self.hdu[0].data = convolvedDataArray
+		self.hdu[self.hduNumber].data = convolvedDataArray
 		self.hdu.writeto(newFileName,overwrite=True)
 
 class RadioImage(HSTImage):
 	def __init__(self,filename):
 		self.hdu = fits.open(filename)
-		self.data = self.hdu[0].data[0][0]
-		self.header = self.hdu[0].header 
+		self.hduNumber = checkHDUNumberOfInterest(self.hdu)
+		self.data = self.hdu[self.hduNumber].data[0][0]
+		self.header = self.hdu[self.hduNumber].header 
 		self.wcs = WCS(self.header,naxis=2)
 		self.pixScaleDeg = self.header['CDELT2']
 		self.pixScaleArcSec = self.pixScaleDeg*3600
@@ -76,12 +92,17 @@ def generateConvolvedImages(opticalFileName,radioFileName,newOpticalFileName,new
 	Radio.writeConvolvedData(convolvedRadio,newRadioFileName)
 
 if __name__ == '__main__':
+	#infile1 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
+	#infile = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits'
 	radioFile = 'data/HZ7_Collapsed.fits'
+
+	#generateConvolvedImages(infile,radioFile,'test1.fits','test2.fits')
 	infile1 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits'
 	infile2 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits'  
 	infile3 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits' 
 	infile4 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_total_sci_gaia_corrected.fits'
 	infiles = [infile1,infile2,infile3,infile4]
+
 
 	for infile in tqdm(infiles):
 		generateConvolvedImages(infile,radioFile,infile.split('gaiacorrected/')[0]+'convolved/'+infile.split('gaiacorrected/')[1].split('.fits')[0]+'_convolved.fits','TEST_RADIO_CONVOLVED.fits')

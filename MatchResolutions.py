@@ -27,17 +27,17 @@ ASCDirectory = 'data/ASCImages/convolved/'
 for file in ASCFiles:
 	infile = ASCDirectory + file
 	ASCFitsFile = fits.open(infile)
-	print('IR Resolution (dx,dy) = ', ASCFitsFile[0].header['CD1_1'], ASCFitsFile[0].header['CD2_2'])
+	print('IR Resolution (dx,dy) = ', ASCFitsFile[1].header['CD1_1'], ASCFitsFile[1].header['CD2_2'])
 	print('HI Resolution (dx,dy) = ', ALMAFitsFile[0].header['CDELT1'], ALMASpectralCube[0].hdu.header['CDELT2'])
 
-	ASCheader = ASCFitsFile[0].header 
+	ASCheader = ASCFitsFile[1].header 
 	ASCwcs = WCS(ASCheader)
-	ASChdu = ASCFitsFile[0].data
+	ASChdu = ASCFitsFile[1].data
 
-	rescaled_ASC_data, _ = reproject_interp(ASCFitsFile,ALMAWCS,shape_out = ASCFitsFile[0].shape)
+	rescaled_ASC_data, _ = reproject_interp(ASCFitsFile[1],ALMAWCS,shape_out = ASCFitsFile[1].shape)
 	rescaled_ASC_imagehdu = fits.PrimaryHDU(data = rescaled_ASC_data, header = ALMASpectralCube[0].hdu.header)
 
-	rescaled_ASC_imagehdu.writeto('data/ASCImages/deresolved/' + file.split('.fits')[0] + '_deresolved.fits')
+	rescaled_ASC_imagehdu.writeto('data/ASCImages/deresolved/' + file.split('.fits')[0] + '_deresolved.fits',overwrite=True)
 
 	image_nan_locs = np.isnan(ASChdu)
 	rescaled_ASC_data_nonans = ASChdu

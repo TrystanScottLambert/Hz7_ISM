@@ -1,2 +1,0 @@
-# CII Surface Profile data 
-# Radii, normalized flux, flux uncertainty 

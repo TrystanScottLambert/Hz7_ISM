@@ -10,9 +10,8 @@ from matplotlib.pyplot import plot
 import numpy as np
 import astropy.units as u
 from spectral_cube import SpectralCube
-import IntegratedLineFitting as ilf
+import line_fitting as lf
 import pylab as plt
-
 
 def calc_rms(array_2d, padding):
     """Function to quickly estimate rms of a 2d_array."""
@@ -144,7 +143,7 @@ class RadioCube():
             sums.append(np.sum(lcl_data))
         sums = np.array(sums) 
 
-        fit = ilf.GuassianFit(self.spectral_cube.spectral_axis.value, sums,
+        fit = lf.GuassianFit(self.spectral_cube.spectral_axis.value, sums,
                               self.spectral_cube.spectral_axis.unit,
                               self.spectral_cube.unit * u.beam)
         return fit
@@ -155,8 +154,6 @@ class RadioCube():
                                             center,
                                             self.equiv_radius_pix.value)
         profile = self.generate_profile_fit(current_mask)
-        profile.plot_line('Initial_guess.png')
-        plt.show()
 
         current_fwfm, current_mean = profile.fwfm[0], profile.mean[0]
         start_vel, end_vel = current_mean - current_fwfm/2, current_mean + current_fwfm/2
@@ -170,7 +167,7 @@ class RadioCube():
             current_moment0 = current_subcube.moment0()
 
             current_rms = calc_rms(current_moment0.value, 20)
-            current_mask = current_moment0.value > 3 * current_rms
+            current_mask = current_moment0.value > self.number_of_deviations * current_rms
             profile = self.generate_profile_fit(current_mask)
             plottting_data = current_moment0.value.copy()
             plottting_data[~current_mask] = np.nan
@@ -179,18 +176,17 @@ class RadioCube():
             start_vel, end_vel = current_mean - current_fwfm/2, current_mean + current_fwfm/2
             iterations += 1
 
-        #print('Done in {iterations} Iterations.')
-        #print('Ranging from {start_vel} ~ {end_vel}.')
-
         start_channel = self.spectral_cube.closest_spectral_channel(
             start_vel * u.km / u.s)
         end_channel = self.spectral_cube.closest_spectral_channel(
             end_vel * u.km / u.s)
-        self.profile_fit = profile
+        
+        self.integrated_emission_profile = profile
+        self.moment0_used_for_profile = plottting_data
         return start_channel, end_channel
 
 if __name__ == '__main__':
-    infile = 'data/HZ7_Centered.fits'
+    infile = '../data/HZ7_Centered.fits'
     center = (156, 140)
     test = RadioCube(infile)
 

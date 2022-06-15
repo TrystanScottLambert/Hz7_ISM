@@ -1,5 +1,5 @@
 
-import Cosmology as cosmo
+import prepare_cube.cosmology as cosmo
 import unittest
 import numpy as np
 

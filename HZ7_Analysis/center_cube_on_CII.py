@@ -12,7 +12,7 @@ from spectral_cube import SpectralCube
 
 
 class Cube:
-	''' main cube object we use for calculations'''
+	"""Main cube object we use for calculations."""
 	CII_REST_FREQ = 1897420620253.1646
 	def __init__(self,input_file,output_file,central_channel):
 		self.central_channel = central_channel
@@ -21,14 +21,14 @@ class Cube:
 		self.hdu = fits.open(self.input_file)
 
 	def centralize_cube(self):
-		''' centralizes the cube'''
+		"""Centralizes the cube."""
 		optimum_frequency = self.find_optimum_frequency()
 		self.hdu[0].header['RESTFRQ'] = optimum_frequency
 		self.redshift = (-optimum_frequency+self.CII_REST_FREQ)/optimum_frequency
 		self.hdu.writeto(self.output_file,overwrite=True)
 
 	def find_optimum_frequency(self):
-		''' Finding the velocity at 0'''
+		"""Finding the velocity at 0."""
 		left, right = self.find_left_right()
 		val = 10 
 		tolerance = 0.000001
@@ -42,7 +42,7 @@ class Cube:
 		return midpoint
 
 	def find_left_right(self):
-		''' finding the upper and lower vals for Newton method'''
+		"""Finding the upper and lower vals for Newton method."""
 		starting_value = self.CII_REST_FREQ
 		current_vel_value = self.calc_vel_from_freq(starting_value)
 		if current_vel_value < 0:
@@ -61,6 +61,7 @@ class Cube:
 			print('Already Centered')
 
 	def calc_vel_from_freq(self, frequency):
+		""""""
 		cube = SpectralCube.read(self.hdu)
 		cube_vel = cube.with_spectral_unit(u.km/u.s, rest_value = frequency* u.Hz, velocity_convention='optical')
 		wcs = WCS(cube_vel.header)
@@ -69,12 +70,16 @@ class Cube:
 		return current_vel
 
 
+def center_cube_on_channel(infile, outfile, channel):
+	return Cube(infile, outfile, channel).centralize_cube()
+
 def main():
 	''' main function'''
-	c = Cube('data/HZ7_Combined.fits','data/HZ7_Centered.fits',64)
+	#c = Cube('data/HZ7_Combined.fits','data/HZ7_Centered.fits',64)
 	#c = Cube('data/Jorge_cut_HZ7/HZ7_COMB_CUBE_15_JvM_cut.fits','data/Jorge_cut_HZ7/HZ7_COMB_CUBE_15_JvM_cut_centered.fits',64)
-	c.centralize_cube()
-
+	#c.centralize_cube()
+	infile = '../data/HZ7_Combined.fits'
+	center_cube_on_channel(infile, infile.replace('Combined','Centered.fits'), 64)
 
 if __name__ == "__main__":
 	main()

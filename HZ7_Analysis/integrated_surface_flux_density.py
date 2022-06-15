@@ -10,7 +10,7 @@ import numpy as np
 from numpy import ndarray 
 import pylab as plt
 from astropy.io import fits
-import CalcChannels
+import integrated_line_emission.calc_channels as calc_channels
 import astropy.units as u 
 
 def flux_density_uncertainty(rms_cube, number_pix_aperture, number_pix_beam):
@@ -38,7 +38,7 @@ class Moment0:
 
     def work_out_flux_density(self, center, radius):
         """Work out flux density for circular aperture with center and radius."""
-        cut_out_data = CalcChannels.cutout_data(self.data, center, radius)
+        cut_out_data = calc_channels.cutout_data(self.data, center, radius)
         #plt.imshow(cut_out_data)
         #plt.savefig(f'delete_when_done_{radius}.png')
         n = len(np.where(cut_out_data != 0)[0])
@@ -58,10 +58,10 @@ class Moment0:
 
     def _calc_rms(self):
         """Gets RMS of the current moment0."""
-        center = CalcChannels.locate_center(self.data)
+        center = calc_channels.locate_center(self.data)
         max_radius = center[0] - 2
         min_radius = max_radius - self.rms_thickness
-        rms_data = CalcChannels.cutout_annulus(self.data, center, min_radius, max_radius)
+        rms_data = calc_channels.cutout_annulus(self.data, center, min_radius, max_radius)
         n = len(np.where(rms_data != 0)[0])
         return np.sqrt(np.sum(rms_data**2)/n)
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     #infile = 'data/HZ7_Collapsed.fits'
     #center = (154, 138) 
 
-    infile = 'data/Jorge_cut_HZ7/data/HZ7_Collapsed.fits'
+    infile = '../data/Jorge_cut_HZ7/data/HZ7_Collapsed.fits'
     center = (303, 286)
 
     cube = Moment0(infile)

@@ -3,10 +3,9 @@ Class to fit guassian lines to [CII] emission
 """
 import numpy as np
 from scipy.optimize import curve_fit
-from scipy import stats
 import astropy.units as u 
 import pylab as plt
-import Cosmology as cosmo
+import cosmology as cosmo
 
 def gaussian_function(x, a, x0, sigma, c):
     return a*np.exp(-(x-x0)**2/(2*sigma**2)) + c
@@ -144,12 +143,13 @@ class GuassianFit():
 		plt.tick_params(which = 'minor', length = 4, direction = 'in')
 		plt.legend(fontsize = 8, frameon = False)
 		plt.savefig(outfile_name, bbox_inches = 'tight', transparent = False)
+		plt.clf()
 
 
 
 if __name__ == '__main__':
-	infile = 'data/JVM_Corrected_Integrated_Spectrum.txt'
-	infile = '/home/trystan/Desktop/DELETEME.txt'
+	infile = '../data/JVM_Corrected_Integrated_Spectrum.txt'
+	#infile = '/home/trystan/Desktop/DELETEME.txt'
 	x,y = np.loadtxt(infile,unpack=True)
 	fit = GuassianFit(x, y, u.km / u.s, u.Jy)
 	fit.plot_line('DELETEME.png')

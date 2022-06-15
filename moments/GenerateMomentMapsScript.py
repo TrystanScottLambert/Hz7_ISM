@@ -2,6 +2,7 @@ import casa
 import os
 import astropy.io.fits as fits
 import numpy as np
+from CalcChannels import RadioCube, calc_rms
 
 names = ['HZ7_mom_includepix.integrated',
 			'HZ7_mom_includepix.weighted_coord',
@@ -16,10 +17,19 @@ names = ['HZ7_mom_includepix.integrated',
 ###############
 #### input ####
 ###############
-rms_val = 2.3e-2  #rms from casa viewer 
-sigma = 2.5   
 infile = 'data/HZ7_Centered.fits'
-emissionChannels = '51~75'   #channels from casa viewer
+center = (156, 140)
+sigma = 2.5
+
+#working out the channels to collapse the cube
+radio_cube = RadioCube(infile)
+starting_channel, ending_channel = radio_cube.calculate_channels(center)
+center_channel = (ending_channel + starting_channel)/2 
+
+#generating the varibales used by spectral cube
+rms_val = radio_cube.spectral_cube[center_channel].value
+emissionChannels = '{starting_channel}~{ending_channel}'   #channels from casa viewer
+
 
 ###########################################################
 #### Option 1: Using the includpix to make moment maps ####

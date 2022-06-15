@@ -169,26 +169,19 @@ class RadioCube():
                 start_vel * u.km / u.s, end_vel * u.km / u.s)
             current_moment0 = current_subcube.moment0()
 
-
-            plt.imshow(current_moment0.value,cmap='magma')
-            plt.show()
-
             current_rms = calc_rms(current_moment0.value, 20)
-            print(current_rms)
             current_mask = current_moment0.value > 3 * current_rms
             profile = self.generate_profile_fit(current_mask)
             plottting_data = current_moment0.value.copy()
             plottting_data[~current_mask] = np.nan
-            plt.imshow(plottting_data)
-            plt.show()
-            profile.plot_line(f'Iteration_{iterations + 1}.png')
-            plt.show()
 
             current_fwfm, current_mean = profile.fwfm[0], profile.mean[0]
             start_vel, end_vel = current_mean - current_fwfm/2, current_mean + current_fwfm/2
             iterations += 1
-        print('Iterations', iterations)
-        print(f' {start_vel} ~ {end_vel}')
+
+        #print('Done in {iterations} Iterations.')
+        #print('Ranging from {start_vel} ~ {end_vel}.')
+
         start_channel = self.spectral_cube.closest_spectral_channel(
             start_vel * u.km / u.s)
         end_channel = self.spectral_cube.closest_spectral_channel(

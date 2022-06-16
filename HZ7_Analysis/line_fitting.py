@@ -132,10 +132,8 @@ class GuassianFit():
 			elif self.y[i] < 0:	
 				plt.axvspan(self.x[i]-binwidth/2,self.x[i]+binwidth/2,ymin=np.abs(float(self.y[i]-y_min  - self.background))/y_range,ymax =zero_point,color='yellow')
 
-
-
-		plt.xlabel('mJy', fontsize = 12)
-		plt.ylabel(r'km s$^{-1}$', fontsize = 12)
+		plt.xlabel(r'Offset Velocity [km s$^{-1}]$', fontsize = 12)
+		plt.ylabel('Flux Density [mJy]', fontsize = 12)
 		plt.tick_params(axis = 'both',labelsize = 10)
 		plt.minorticks_on()
 		plt.tick_params(which = 'both', width = 2) 

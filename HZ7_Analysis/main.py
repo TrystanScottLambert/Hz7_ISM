@@ -2,12 +2,13 @@
 
 import center_cube_on_CII
 import calc_channels
-import warnings
 import generate_moments
+from plot_moment_maps import MomentMap
+
 import pylab as plt
+import warnings
 
 warnings.filterwarnings("ignore")  # mainly coming from spectral_cube
-
 
 ####### INPUTS #######
 combined_cube = 'data/HZ7_Combined.fits'
@@ -48,3 +49,17 @@ masked_moments = generate_moments.MaskedMomentMaker(centered_cube, 'data/HZ7')
 masked_moments.generate_standard_moment_maps(start_channel, end_channel)
 print('Moment maps created and are in the data folder')
 
+# Create the plots for the moment maps
+print()
+print('Plotting the moment maps...')
+moment_0 = MomentMap('data/HZ7_integrated.fits', order = 0)
+moment_1 = MomentMap('data/HZ7_Masked_weighted_coord.fits', order = 1)
+moment_2 = MomentMap('data/HZ7_Masked_weighted_dispersion_coord.fits', order = 2)
+
+print('\t plotting 0')
+moment_0.plot_moment('plots/moment0.png', 'data/HZ7_integrated.fits', cmap = 'inferno')
+print('\t plotting 1')
+moment_1.plot_moment('plots/moment1.png', 'data/HZ7_integrated.fits', vmin = -100, vmax = 100, cmap = 'coolwarm')
+print('\t plotting 2')
+moment_2.plot_moment('plots/moment2.png', 'data/HZ7_integrated.fits', cmap = 'inferno')
+print('Moment maps saved in plotting as moment0.png, moment1.png, and moment2.png')

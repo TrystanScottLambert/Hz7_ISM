@@ -19,17 +19,19 @@ class MomentMaker(ABC):
     def __init__(self, infile: str, outfile: str) -> None:
         self.infile = infile
         self.outfile = outfile
-    
+
     @abstractmethod
-    def generate_moment_map(self, start_channel: int, end_channel: int, order: int):
+    def generate_moment_map(self, start_channel: int, end_channel: int, order: int) -> None:
         """ Makes a moment map for the give order."""
-        pass
-    
+
     def generate_standard_moment_maps(self, start_channel: int, end_channel: int) -> None:
+        """Creates the moment 0, 1, and 2 maps."""
         for i in range(3):
             self.generate_moment_map(start_channel, end_channel, order = i)
-    
+
 class NonMaskedMomentMaker(MomentMaker):
+    """Manages non masked moment maps."""
+
     def generate_moment_map(self, start_channel: int, end_channel: int, order: int):
         cube = SpectralCube.read(self.infile)
         cube_kms  = cube.with_spectral_unit(u.km / u.s, velocity_convention = 'optical')
@@ -42,8 +44,10 @@ class NonMaskedMomentMaker(MomentMaker):
         else:
             moment_map = sub_cube_kms.moment(order=order)
         moment_map.write(f'{self.outfile}_{MOMENT_NAMES[order]}.fits', overwrite = True)
-    
+
 class MaskedMomentMaker(MomentMaker):
+    """Manages masked moment maps."""
+
     def generate_moment_map(self, start_channel: int, end_channel: int, order: int):
         #create a test moment-0 map to work out the rms
         temp_maker = NonMaskedMomentMaker(self.infile, 'temp')
@@ -77,9 +81,9 @@ def delete_file(file_name: str) -> None:
         os.remove(file_name)
 
 if __name__ == '__main__':
-    file_name = 'data/HZ7_Centered.fits'
-    another_test = MaskedMomentMaker(infile, 'testing')
+    FILE_NAME = 'data/HZ7_Centered.fits'
+    another_test = MaskedMomentMaker(FILE_NAME, 'testing')
     another_test.generate_standard_moment_maps(50, 80)
 
-    test = NonMaskedMomentMaker(infile, 'testing')
+    test = NonMaskedMomentMaker(FILE_NAME, 'testing')
     test.generate_standard_moment_maps(50, 80)

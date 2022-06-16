@@ -56,7 +56,6 @@ class MaskedMomentMaker(MomentMaker):
         temp_string = f'temp_{MOMENT_NAMES[0]}.fits'
         moment0 = fits.open(temp_string)
         rms = calc_rms(moment0[0].data, 20)
-        print('RMS_FOR_TESTING: ', rms)
         mask = moment0[0].data > 3 * rms
 
         cube = SpectralCube.read(self.infile)
@@ -80,10 +79,16 @@ def delete_file(file_name: str) -> None:
     if os.path.exists(file_name):
         os.remove(file_name)
 
-if __name__ == '__main__':
+def main():
+    """Main function."""
     FILE_NAME = 'data/HZ7_Centered.fits'
-    another_test = MaskedMomentMaker(FILE_NAME, 'testing')
-    another_test.generate_standard_moment_maps(50, 80)
+    masked_test = MaskedMomentMaker(FILE_NAME, 'testing')
+    masked_test.generate_standard_moment_maps(50, 80)
 
-    test = NonMaskedMomentMaker(FILE_NAME, 'testing')
-    test.generate_standard_moment_maps(50, 80)
+    not_masked_test = NonMaskedMomentMaker(FILE_NAME, 'testing')
+    not_masked_test.generate_standard_moment_maps(50, 80)
+
+
+
+if __name__ == '__main__':
+    main()

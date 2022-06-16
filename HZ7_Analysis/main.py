@@ -3,6 +3,7 @@
 import center_cube_on_CII
 import calc_channels
 import warnings
+import generate_moments
 import pylab as plt
 
 warnings.filterwarnings("ignore")  # mainly coming from spectral_cube
@@ -38,4 +39,12 @@ print(f'\t -> File saved in plots folder as "integrated_emission_line.png')
 print(f'\t -> Diagnostic plot "moment0_map_used_for_mask is also saved"')
 
 # generate the moment maps
+print('Generating the moment maps...')
+print('\t Making moment maps (0,1,2)...')
+not_masked_moments = generate_moments.NonMaskedMomentMaker(centered_cube,'data/HZ7')
+not_masked_moments.generate_standard_moment_maps(start_channel, end_channel)
+print('\t Making masked moment maps (0,1,2)...')
+masked_moments = generate_moments.MaskedMomentMaker(centered_cube, 'data/HZ7')
+masked_moments.generate_standard_moment_maps(start_channel, end_channel)
+print('Moment maps created and are in the data folder')
 

@@ -2,9 +2,8 @@ import casa
 import os
 import astropy.io.fits as fits
 import numpy as np
-from CalcChannels import RadioCube, calc_rms
 
-names = ['HZ7_mom_includepix.integrated',s
+names = ['HZ7_mom_includepix.integrated',
 			'HZ7_mom_includepix.weighted_coord',
 			'HZ7_mom_includepix.weighted_dispersion_coord',
 			'HZ7_mom_mask1.integrated',
@@ -18,16 +17,10 @@ names = ['HZ7_mom_includepix.integrated',s
 #### input ####
 ###############
 infile = 'data/HZ7_Centered.fits'
-center = (156, 140)
-sigma = 2.5
-rms_val = radio_cube.spectral_cube[center_channel].value
-emissionChannels = '{starting_channel}~{ending_channel}'   #channels from casa viewer
+sigma = 3
+rms_val = 0.021253365673497466
+emissionChannels = '50~80'   #channels from casa viewer
 
-
-#working out the channels to collapse the cube
-radio_cube = RadioCube(infile)
-starting_channel, ending_channel = radio_cube.calculate_channels(center)
-center_channel = (ending_channel + starting_channel)/2 
 
 #generating the varibales used by spectral cube
 

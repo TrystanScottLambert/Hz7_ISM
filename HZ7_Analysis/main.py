@@ -5,6 +5,7 @@ import calc_channels
 import generate_moments
 from plot_moment_maps import MomentMap
 from align import GaiaAlignment
+from convolution import generateConvolvedImages
 
 import pylab as plt
 import warnings
@@ -75,6 +76,28 @@ print('Moment maps saved in plotting as moment0.png, moment1.png, and moment2.pn
 # Create cubes which we can compare to hubble
 
 """First thing we want to do is align the cubes using GAIA"""
+print('Aligning hubble images with GAIA (user interaction required)')
+gaia_corrected_file_names = []
 for hubble_image in hubble_images:
-    GaiaAlignment(hubble_image).applySimpleCorrection(
-        hubble_image.replace('raw', 'gaiacorrected').split('.fits')[0] + '_gaia_corrected.fits')
+    gaia_corrected_file_name = hubble_image.replace(
+        'raw', 'gaiacorrected').split('.fits')[0] + '_gaia_corrected.fits'
+
+    GaiaAlignment(hubble_image).applySimpleCorrection(gaia_corrected_file_name)
+    gaia_corrected_file_names.append(gaia_corrected_file_name)
+print('Images aligned are saved in the data/ASCImages/gaiacorrected folder')
+
+"""Next thing we need to do is convolve the images to the radio beam"""
+print('Convolving hubble images to Radio Cube beam size (this might take a minute)')
+convolved_file_names = []
+for gaia_corrected_file_name in gaia_corrected_file_names:
+    convolved_file_name = gaia_corrected_file_name.replace(
+        'gaiacorrected', 'convolved').split('.fits')[0] + '_convolved.fits'
+    convolved_file_names.append(convolved_file_name)
+   
+    generateConvolvedImages(
+        gaia_corrected_file_name, 'data/HZ7_integrated.fits', convolved_file_name, 'TEST_RADIO_CONVOLVED.fits'
+    )
+print('Convolution done. Files saved in data/ASCImages/convolved')
+
+"""Finally we match the resolutions. This may not be needed so prepare to take this out."""
+

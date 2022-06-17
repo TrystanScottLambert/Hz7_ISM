@@ -47,7 +47,7 @@ class RadioImage(HSTImage):
 	def __init__(self,filename):
 		self.hdu = fits.open(filename)
 		self.hduNumber = checkHDUNumberOfInterest(self.hdu)
-		self.data = self.hdu[self.hduNumber].data[0][0]
+		self.data = self.hdu[self.hduNumber].data
 		self.header = self.hdu[self.hduNumber].header 
 		self.wcs = WCS(self.header,naxis=2)
 		self.pixScaleDeg = self.header['CDELT2']
@@ -94,15 +94,14 @@ def generateConvolvedImages(opticalFileName,radioFileName,newOpticalFileName,new
 if __name__ == '__main__':
 	#infile1 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
 	#infile = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits'
-	radioFile = 'data/HZ7_Collapsed.fits'
+	radioFile = 'data/HZ7_integrated.fits'
 
 	#generateConvolvedImages(infile,radioFile,'test1.fits','test2.fits')
-	infile1 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits'
-	infile2 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits'  
-	infile3 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits' 
-	infile4 = 'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_total_sci_gaia_corrected.fits'
-	infiles = [infile1,infile2,infile3,infile4]
-
+	infiles = [
+		'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected.fits',
+		'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f125w_sci_gaia_corrected.fits',
+		'data/ASCImages/gaiacorrected/hst_13641_07_wfc3_ir_f160w_sci_gaia_corrected.fits',
+	]
 
 	for infile in tqdm(infiles):
 		generateConvolvedImages(infile,radioFile,infile.split('gaiacorrected/')[0]+'convolved/'+infile.split('gaiacorrected/')[1].split('.fits')[0]+'_convolved.fits','TEST_RADIO_CONVOLVED.fits')

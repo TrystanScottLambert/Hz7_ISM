@@ -4,18 +4,26 @@ import center_cube_on_CII
 import calc_channels
 import generate_moments
 from plot_moment_maps import MomentMap
+from align import GaiaAlignment
 
 import pylab as plt
 import warnings
 
 warnings.filterwarnings("ignore")  # mainly coming from spectral_cube
 
-####### INPUTS #######
+########################## INPUTS ################################
+
 combined_cube = 'data/HZ7_Combined.fits'
 centered_cube = 'data/HZ7_Centered.fits'
 central_channel = 64
 centeral_pixel_position = (156, 140)
-######################
+
+hubble_images = [
+    'data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits',
+	'data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits',
+	'data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits',
+]
+#################################################################
 
 # center the combined cube on the emission from [CII]
 print('\n\n')
@@ -63,3 +71,10 @@ moment_1.plot_moment('plots/moment1.png', 'data/HZ7_integrated.fits', vmin = -10
 print('\t plotting 2')
 moment_2.plot_moment('plots/moment2.png', 'data/HZ7_integrated.fits', cmap = 'inferno')
 print('Moment maps saved in plotting as moment0.png, moment1.png, and moment2.png')
+
+# Create cubes which we can compare to hubble
+
+"""First thing we want to do is align the cubes using GAIA"""
+for hubble_image in hubble_images:
+    GaiaAlignment(hubble_image).applySimpleCorrection(
+        hubble_image.replace('raw', 'gaiacorrected').split('.fits')[0] + '_gaia_corrected.fits')

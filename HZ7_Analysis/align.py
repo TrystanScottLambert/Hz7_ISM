@@ -1,8 +1,8 @@
-##############################################
-#                                            #
-# Program to Align HST images to one another #
-#                                            #
-##############################################
+#######################################
+#                                     #
+# Program to Align HST images to GAIA #
+#                                     #
+#######################################
 
 import numpy as np 
 import matplotlib.pyplot as plt
@@ -68,9 +68,9 @@ def gauss(x, H, A, x0, sigma):
 
 def gaussFit(x, y):
 	mean = sum(x * y) / sum(y)
-    sigma = np.sqrt(sum(y * (x - mean) ** 2) / sum(y))
-    popt, pcov = curve_fit(gauss, x, y, p0=[min(y), max(y), mean, sigma])
-    return popt
+	sigma = np.sqrt(sum(y * (x - mean) ** 2) / sum(y))
+	popt, pcov = curve_fit(gauss, x, y, p0=[min(y), max(y), mean, sigma])
+	return popt
 
 def cutStar(xPosition,yPosition,imageData):
 	xPositionRounded, yPositionRounded = int(round(xPosition)), int(round(yPosition))
@@ -177,16 +177,12 @@ class GaiaAlignment:
 
 
 if __name__ == '__main__':
-	infile1 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
-	infile2 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits'
-	infile3 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits'
-	infile4 = '/home/trystan/Desktop/Work/Hz7_ISM/data/ASCImages/raw/hst_13641_07_wfc3_ir_total_sci.fits'
+	infile1 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits'
+	infile2 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_f125w_sci.fits'
+	infile3 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_f160w_sci.fits'
+	infile4 = 'data/ASCImages/raw/hst_13641_07_wfc3_ir_total_sci.fits'
 	infiles = [infile1,infile2,infile3,infile4]
 
 	for infile in infiles:
 		ga = GaiaAlignment(infile)
 		#ga.applySimpleCorrection('data/ASCImages/gaiacorrected/' + infile.split('/')[-1].split('.fit')[0] + '_gaia_corrected.fits')
-
-
-
-###############################################################################################################################################

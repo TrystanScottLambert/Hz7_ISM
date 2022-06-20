@@ -14,6 +14,7 @@ MOMENT_NAMES = {
     2: 'weighted_dispersion_coord'
 }
 
+
 class MomentMaker(ABC):
     """General class defning what a moment map should have."""
     def __init__(self, infile: str, outfile: str) -> None:
@@ -50,19 +51,22 @@ class MaskedMomentMaker(MomentMaker):
 
     def generate_moment_map(self, start_channel: int, end_channel: int, order: int):
         #create a test moment-0 map to work out the rms
+        mid_channel = (start_channel + end_channel)//2
+
         temp_maker = NonMaskedMomentMaker(self.infile, 'temp')
         temp_maker.generate_moment_map(start_channel, end_channel, order = 0)
 
-        temp_string = f'temp_{MOMENT_NAMES[0]}.fits'
-        moment0 = fits.open(temp_string)
-        rms = calc_rms(moment0[0].data, 20)
-        mask = moment0[0].data > 3 * rms
-
         cube = SpectralCube.read(self.infile)
         cube_kms  = cube.with_spectral_unit(u.km / u.s, velocity_convention = 'optical')
+        rms = calc_rms(cube_kms[mid_channel].value, 20)
+        print(rms)
         sub_cube_kms = cube_kms.spectral_slab(
             cube_kms.spectral_axis[start_channel],
             cube_kms.spectral_axis[end_channel])
+
+        temp_string = f'temp_{MOMENT_NAMES[0]}.fits'
+        moment0 = fits.open(temp_string)
+        mask = moment0[0].data > 3 * rms
 
         masked_cube = sub_cube_kms.with_mask(mask)
         if order == 2:

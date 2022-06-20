@@ -2,21 +2,22 @@
 
 This is done by taking a moment-0 map and placing an aperture.
 One then sums the flux within this aperture and corrects for beam (hence flux density).
-The uncertainty will only ever be dependent on the size of the aperture. 
+The uncertainty will only ever be dependent on the size of the aperture.
 """
 
-from email.mime import application
 import numpy as np
-from numpy import ndarray 
 import pylab as plt
 from astropy.io import fits
-import integrated_line_emission.calc_channels as calc_channels
-import astropy.units as u 
+import  calc_channels
+import astropy.units as u
+from typing import Tuple
 
 def flux_density_uncertainty(rms_cube, number_pix_aperture, number_pix_beam):
+    """Working out the uncertainty of an aperture size."""
     return rms_cube * np.sqrt(number_pix_aperture / number_pix_beam)
 
 class Moment0:
+    """Main class."""
     def __init__(self, infile):
         self.hdulist = fits.open(infile)
         self.header = self.hdulist[0].header
@@ -29,26 +30,31 @@ class Moment0:
         self.deg_per_pix = self.header['CDELT2']
         self.square_deg_per_pix = self.deg_per_pix**2
         self.beam_size = (np.pi * (self.bmaj / self.deg_per_pix) * (self.bmin / self.deg_per_pix))/(4 * np.log(2))
-        self.rms_thickness = 25
+        self.rms_thickness = 20
         self.rms = self._calc_rms()
 
-    def read_beam_info(self):
-        bmaj = self.header['BMAJ']
-        bmin = self.header['BMIN']
-
-    def work_out_flux_density(self, center, radius):
+    def work_out_flux_density(self, center: Tuple[int, int], radius: float) -> Tuple[float, float]:
         """Work out flux density for circular aperture with center and radius."""
         cut_out_data = calc_channels.cutout_data(self.data, center, radius)
-        #plt.imshow(cut_out_data)
-        #plt.savefig(f'delete_when_done_{radius}.png')
-        n = len(np.where(cut_out_data != 0)[0])
-        print(n)
+        number_of_pixels = len(np.where(cut_out_data != 0)[0])
         flux = np.sum(cut_out_data)
         flux_density = flux / self.beam_size
-        uncertainty = flux_density_uncertainty(self.rms, n, self.beam_size)
+        uncertainty = flux_density_uncertainty(self.rms, number_of_pixels, self.beam_size)
         return flux_density, uncertainty
-    
+
+    def work_out_annulus_flux_density(self, center: Tuple[int, int],
+                min_radius: float, max_radius: float) -> Tuple[float, float]:
+        """Calculates the flux density of a annulus with errors"""
+
+        cut_out_data = calc_channels.cutout_annulus(self.data, center, min_radius, max_radius)
+        number_of_pixels = len(np.where(cut_out_data != 0)[0])
+        flux = np.sum(cut_out_data)
+        flux_density = flux / self.beam_size
+        uncertainty = flux_density_uncertainty(self.rms, number_of_pixels, self.beam_size)
+        return flux_density, uncertainty
+
     def apply_multiple_apertures(self, center, start_radius, end_radius):
+        """Works out the aperture measurements for many different radii."""
         flux_densities = []
         areas = []
         for radius in np.linspace(start_radius, end_radius,100):
@@ -62,16 +68,14 @@ class Moment0:
         max_radius = center[0] - 2
         min_radius = max_radius - self.rms_thickness
         rms_data = calc_channels.cutout_annulus(self.data, center, min_radius, max_radius)
-        n = len(np.where(rms_data != 0)[0])
-        return np.sqrt(np.sum(rms_data**2)/n)
-
-
+        number_of_pixels = len(np.where(rms_data != 0)[0])
+        return np.sqrt(np.sum(rms_data**2)/number_of_pixels)
 
 if __name__ == '__main__':
     #infile = 'data/HZ7_Collapsed.fits'
-    #center = (154, 138) 
-
-    infile = '../data/Jorge_cut_HZ7/data/HZ7_Collapsed.fits'
+    #center = (154, 138)
+ 
+    infile = 'data/Jorge_cut_HZ7/data/HZ7_Collapsed.fits'
     center = (303, 286)
 
     cube = Moment0(infile)

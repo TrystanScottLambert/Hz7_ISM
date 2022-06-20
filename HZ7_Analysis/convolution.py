@@ -14,7 +14,7 @@ from astropy.convolution import convolve, convolve_fft
 from astropy.wcs import WCS 
 from tqdm import tqdm
 
-def checkHDUNumberOfInterest(hduList):
+def get_hdu_data_index(hduList):
 	hasData = False
 	for i in range(len(hduList)):
 		try:
@@ -31,7 +31,7 @@ def checkHDUNumberOfInterest(hduList):
 class HSTImage:
 	def __init__(self,filename):
 		self.hdu = fits.open(filename)
-		self.hduNumber = checkHDUNumberOfInterest(self.hdu)
+		self.hduNumber = get_hdu_data_index(self.hdu)
 		self.data = self.hdu[self.hduNumber].data 
 		self.header = self.hdu[self.hduNumber].header 
 		self.wcs = WCS(self.header,naxis=2)
@@ -46,7 +46,7 @@ class HSTImage:
 class RadioImage(HSTImage):
 	def __init__(self,filename):
 		self.hdu = fits.open(filename)
-		self.hduNumber = checkHDUNumberOfInterest(self.hdu)
+		self.hduNumber = get_hdu_data_index(self.hdu)
 		self.data = self.hdu[self.hduNumber].data
 		self.header = self.hdu[self.hduNumber].header 
 		self.wcs = WCS(self.header,naxis=2)

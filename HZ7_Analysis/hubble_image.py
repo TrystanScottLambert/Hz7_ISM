@@ -8,15 +8,29 @@ from calc_channels import cutout_annulus, cutout_data
 from fits_images import FitsImage
 from sersic_fitter import SersicFitter
 import pylab as plt
+from astropy.stats import sigma_clipped_stats
+from photutils.segmentation import make_source_mask
 
 ARCSECONDS_IN_DEGREE = 3600.
 
 def _calc_local_rms(hubble_image: np.ndarray, center: Tuple[int, int]) -> float:
     """Calculates the rms using a 20 pixel anulus, starting at 20pix radius around the source."""
     data = cutout_annulus(hubble_image, center, 20, 40)
-    number_of_pixels = len(np.where(data != 0)[0])
-    return np.sqrt(np.sum(data**2)/number_of_pixels)
+    data_copy = data.copy()
+    data_copy[data_copy == 0] = np.nan
+    return np.nanstd(data_copy) #np.sqrt(np.sum(data**2)/number_of_pixels)
 
+def calc_background(data: np.ndarray) -> float:
+    """Function masked sources then works out the clipped median."""
+    mask = make_source_mask(data, nsigma=2, npixels=5, dilate_size=11)
+    _, median, _ = sigma_clipped_stats(data, sigma=3, mask=mask)
+    return median
+
+def calc_local_background(data: np.ndarray, center: Tuple[int, int]) ->float:
+    data = cutout_annulus(data, center, 20, 40)
+    data_copy = data.copy()
+    data_copy[data_copy == 0] = np.nan
+    return np.nanmedian(data_copy)
 
 class HubbleImage(FitsImage):
     """Main class for reading in a hubble image."""
@@ -24,8 +38,9 @@ class HubbleImage(FitsImage):
         super().__init__(infile)
         self.hdul = fits.open(infile)
         self.header = self.hdul[1].header
-        self.data = self.hdul[1].data
-
+        self.data_non_subtracted = self.hdul[1].data
+        self.data = self.data_non_subtracted - calc_background(self.data_non_subtracted)
+        
     @property
     def wcs(self) -> WCS:
         """The world coordinate system."""
@@ -101,7 +116,7 @@ class HubbleImage(FitsImage):
             else:
                 plotting_radii.append((radii[i] + radii[i+1]) / 2)
                 val = self.calc_sum_anulus(center, radii[i], radii[i+1])
-
+            #plotting_radii.append((radii[i] + radii[i+1]) / 2)
             fluxes.append(val[0])
             uncertainties.append(val[1])
             areas.append(val[2])
@@ -110,18 +125,23 @@ class HubbleImage(FitsImage):
     def get_surface_profile_params(self, center: Tuple[int, int], radii: np.ndarray):
         """Fits sersic profiles to surface profile data for a given fits image."""
         x_vals, y_vals, y_uncertainties, areas = self.generate_radial_profile(center, radii)
-        y_plotting = y_vals / areas
+        y_plotting = (y_vals / areas) 
 
         surface_brightness = self.calculate_stmags(y_plotting)
         surface_brightness_uncertainty = 2.5 * (y_uncertainties / (y_vals  * np.log(10)))
         fit_free_params, fit_n1_params = SersicFitter(x_vals, surface_brightness, surface_brightness_uncertainty).fit_sersics()
-
         return x_vals, surface_brightness, surface_brightness_uncertainty, fit_free_params, fit_n1_params
-    
+        #y_plotting_uncertainties = (y_uncertainties/areas) * self.photfnu
+        #fit_free_params, fit_n1_params = SersicFitter(x_vals, y_plotting, y_plotting_uncertainties).fit_sersics()
+        #return x_vals, y_plotting, y_plotting_uncertainties, fit_free_params, fit_n1_params
+
     def _plot_settings(self):
         plt.gca().invert_yaxis()
         plt.ylabel('Surface brightness [mag /arcsecond'+r'$^{2}]$')
+        #plt.ylabel('Flux / Area [Jy /arcsecond'+r'$^{2}]$')
+        #plt.ylabel(r'$e^{-1} s^{-1}$ /arcsecond$^{2}]$')
         plt.minorticks_on()
+        #plt.axhline(0)
         plt.tick_params(which='both', width=2,direction='in') 
         plt.tick_params(which='major', length=4, direction='in')
 
@@ -130,6 +150,8 @@ if __name__ == '__main__':
     INFILE = 'data/ASCImages/convolved/hst_13641_07_wfc3_ir_f105w_sci_gaia_corrected_convolved.fits'
     F105W = HubbleImage(INFILE)
     CENTER = (1150,1046)
-    RADII = np.arange(0, 22, 1)
+    print('BACKGROUND: ', calc_local_background(F105W.data, CENTER))
+    #CENTER = (1231, 760)
+    RADII = np.arange(0, 40, 2)
     params = F105W.get_surface_profile_params(CENTER, RADII)  
     F105W.plot_surface_profile(*params)

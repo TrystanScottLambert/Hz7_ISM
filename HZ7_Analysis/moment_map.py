@@ -49,16 +49,18 @@ class MomentMap(FitsImage):
             if radii_pixs[i] == 0:
                 plotting_radii.append(0)
                 val = self.calc_aperture_flux_density(center, radii_pixs[i+1])
+                pass
             else:
                 plotting_radii.append((radii_pixs[i] + radii_pixs[i+1]) / 2)
                 val = self.calc_annulus_flux_density(center, radii_pixs[i], radii_pixs[i+1])
 
+            #plotting_radii.append((radii_pixs[i] + radii_pixs[i+1]) / 2)
             fluxes.append(val[0])
             uncertainties.append(val[1])
             areas.append(val[2])
         return np.array(plotting_radii), np.array(fluxes), np.array(uncertainties), np.array(areas)
 
-    def _calc_sum(self, masked_data: np.ndarray):
+    def _calc_sum(self, masked_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Works out the flux density and uncertainty for a masked region."""
 
         number_of_pixels = len(np.where(masked_data != 0)[0])
@@ -94,6 +96,7 @@ class MomentMap(FitsImage):
     def _plot_settings(self) -> None:
         plt.ylabel('Flux Density / Area [Jy.km/s /arcsecond'+r'$^{2}]$')
         plt.minorticks_on()
+        plt.axhline(0)
         plt.tick_params(which='both', width=2,direction='in') 
         plt.tick_params(which='major', length=4, direction='in')
 
@@ -102,6 +105,6 @@ if __name__ == '__main__':
     INFILE = 'data/HZ7_integrated.fits'
     moment0 = MomentMap(INFILE)
     CENTER = (154, 138)
-    RADII = np.arange(0, 80, 5)
+    RADII = np.arange(1, 100, 10)
     moment0.do_radial_profile(CENTER, RADII)
     

@@ -12,6 +12,8 @@ import plotBeam as pb
 from calc_channels import calc_rms
 import matplotlib as mpl  
 
+SCALE = 6.129 # kpc/" from cosmology calculator
+
 #making the plots look nice
 mpl.rcParams.update({'font.size': 2})   #Always run this line just to have tick mark sizes looking good. 
 mpl.rcParams['font.family'] = 'Avenir'
@@ -50,6 +52,11 @@ class MomentMap:
 		prettifyPlot('Right ascension', 'Declination')
 		plt.xlim(100,200)
 		plt.ylim(100,170)
+		arc_per_pix = fits_header['CDELT2'] * 3600
+		error_bar_width = arc_per_pix * SCALE
+		ax.errorbar(150, 110, xerr= (5 / error_bar_width) / 2, color='k', capsize=1.5)
+		ax.text( 150, 107, '5 kpc',  horizontalalignment='center', verticalalignment='top')
+
 		plt.savefig(outfile, bbox_inches = 'tight', transparent = False)
 		plt.clf()
 			

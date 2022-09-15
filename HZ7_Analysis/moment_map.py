@@ -8,6 +8,8 @@ from fits_images import FitsImage
 from calc_channels import cutout_annulus, cutout_data, calc_rms
 from sersic_fitter import SersicFitter
 import pylab as plt
+from mcmc_sersisc_fit import sersic_fit
+from mcmc_sersisc1_fit import sersic1_fit
 
 ARCSECONDS_IN_DEGREE = 3600.
 
@@ -46,18 +48,12 @@ class MomentMap(FitsImage):
         """Creates the radial profile based on an array of radii."""
         fluxes, uncertainties, plotting_radii, areas = [], [], [], []
         for i in range(len(radii_pixs) - 1):
-            if radii_pixs[i] == 0:
-                plotting_radii.append(0)
-                val = self.calc_aperture_flux_density(center, radii_pixs[i+1])
-                pass
-            else:
+            if radii_pixs[i] != 0:
                 plotting_radii.append((radii_pixs[i] + radii_pixs[i+1]) / 2)
                 val = self.calc_annulus_flux_density(center, radii_pixs[i], radii_pixs[i+1])
-
-            #plotting_radii.append((radii_pixs[i] + radii_pixs[i+1]) / 2)
-            fluxes.append(val[0])
-            uncertainties.append(val[1])
-            areas.append(val[2])
+                fluxes.append(val[0])
+                uncertainties.append(val[1])
+                areas.append(val[2])
         return np.array(plotting_radii), np.array(fluxes), np.array(uncertainties), np.array(areas)
 
     def _calc_sum(self, masked_data: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -105,6 +101,7 @@ if __name__ == '__main__':
     INFILE = 'data/HZ7_integrated.fits'
     moment0 = MomentMap(INFILE)
     CENTER = (154, 138)
-    RADII = np.arange(1, 100, 10)
+    RADII = np.arange(0, 100, 2)
     moment0.do_radial_profile(CENTER, RADII)
-    
+    testx, testy, testerr,_, _ = moment0.get_surface_profile_params(CENTER, RADII)
+    thing = sersic1_fit(testx, testy, testerr)

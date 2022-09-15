@@ -10,6 +10,7 @@ from sersic_fitter import SersicFitter
 import pylab as plt
 from astropy.stats import sigma_clipped_stats
 from photutils.segmentation import make_source_mask
+from mcmc_sersisc_fit import sersic_fit
 
 ARCSECONDS_IN_DEGREE = 3600.
 
@@ -110,16 +111,12 @@ class HubbleImage(FitsImage):
         """Creates a surface profile"""
         fluxes, uncertainties, plotting_radii, areas = [], [], [], []
         for i in range(len(radii) - 1):
-            if radii[i] == 0:
-                plotting_radii.append(0)
-                val = self.calc_sum_aperture(center, radii[i+1])
-            else:
+            if True:#radii[i] == 0:
                 plotting_radii.append((radii[i] + radii[i+1]) / 2)
                 val = self.calc_sum_anulus(center, radii[i], radii[i+1])
-            #plotting_radii.append((radii[i] + radii[i+1]) / 2)
-            fluxes.append(val[0])
-            uncertainties.append(val[1])
-            areas.append(val[2])
+                fluxes.append(val[0])
+                uncertainties.append(val[1])
+                areas.append(val[2])
         return np.array(plotting_radii), np.array(fluxes), np.array(uncertainties), np.array(areas)
     
     def get_surface_profile_params(self, center: Tuple[int, int], radii: np.ndarray):
@@ -155,3 +152,5 @@ if __name__ == '__main__':
     RADII = np.arange(0, 40, 2)
     params = F105W.get_surface_profile_params(CENTER, RADII)  
     F105W.plot_surface_profile(*params)
+    testx, testy, testerr,_, _ = F105W.get_surface_profile_params(CENTER, RADII)
+    thing = sersic_fit(testx, -testy+40, testerr)

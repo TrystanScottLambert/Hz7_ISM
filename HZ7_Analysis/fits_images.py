@@ -6,6 +6,7 @@ import numpy as np
 from astropy.wcs import WCS
 from sersic_fitter import sersic, sersic_n1
 from pylab import plt
+from astropy.cosmology import FlatLambdaCDM
 
 class FitsImage(ABC):
     """Main class for fits images."""
@@ -55,3 +56,14 @@ class FitsImage(ABC):
         """Plots a radial profile for the image """
         params = self.get_surface_profile_params(center, radii)
         self.plot_surface_profile(*params)
+    
+    def convert_pixels_to_arcsec(self, array_of_pixels: np.ndarray) -> np.ndarray:
+        """Takes and arry of pixels and converts it to arcseconds."""
+        return array_of_pixels * self.arcsec_per_pix
+    
+    def convert_arcsecs_to_kpc(self, array_of_arcsecs: np.ndarray, redshift: float) -> np.ndarray:
+        """Converts an array of arcsecs into kpc"""
+        cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
+        kpc_per_arcsec = 1./cosmo.arcsec_per_kpc_proper(redshift)
+        return array_of_arcsecs * kpc_per_arcsec
+

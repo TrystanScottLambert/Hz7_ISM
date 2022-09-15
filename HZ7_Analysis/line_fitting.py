@@ -142,7 +142,19 @@ class GuassianFit():
 		plt.legend(fontsize = 8, frameon = False)
 		plt.savefig(outfile_name, bbox_inches = 'tight', transparent = False)
 		plt.clf()
+	
+	def print_properties(self, redshift):
+		print('------------------')
+		print(f'Peak Flux: {self.a[0]} +- {self.a[1]}')
+		print(f'central Velocity: {self.mean[0]} +- {self.mean[1]}')
+		print(f'sigma: {self.sigma[0]} pm {self.sigma[1]}')
+		print(f'FWHM: {self.FWHM[0]} +- {self.FWHM[1]}')
+		print(f'Integrated: {self.integral[0]} +- {self.integral[1]}')
+		luminosity = calculate_luminosity(self.integral[0], redshift)
+		luminosity_error = calculate_luminosity_uncertainty(luminosity, self.integral[0], redshift, self.integral[1],0.0004)
+		print(f'log Luminosity: {np.log10(luminosity)} +- {(luminosity_error)/(luminosity * np.log(10))}')
 
+	
 
 
 if __name__ == '__main__':

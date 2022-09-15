@@ -14,10 +14,15 @@ warnings.filterwarnings("ignore")  # mainly coming from spectral_cube
 
 ########################## INPUTS ################################
 
-combined_cube = 'data/HZ7_Combined.fits'
+'''combined_cube = 'data/HZ7_Combined.fits'
 centered_cube = 'data/HZ7_Centered.fits'
 central_channel = 64
-centeral_pixel_position = (156, 140)
+centeral_pixel_position = (156, 140)'''
+
+combined_cube = 'data/Jorge_cut_HZ7/HZ7_COMB_CUBE_15_JvM_cut.fits'
+centered_cube = 'data/Jorge_cut_HZ7/HZ7_COMB_CUBE_15_JvM_cut_centered.fits'
+central_channel = 63
+centeral_pixel_position = (156,140)
 
 hubble_images = [
     'data/ASCImages/raw/hst_13641_07_wfc3_ir_f105w_sci.fits',
@@ -99,5 +104,5 @@ for gaia_corrected_file_name in gaia_corrected_file_names:
     )
 print('Convolution done. Files saved in data/ASCImages/convolved')
 
-"""Finally we match the resolutions. This may not be needed so prepare to take this out."""
+"""Make Radio Overlay Image on top of hubble image with continuum"""
 

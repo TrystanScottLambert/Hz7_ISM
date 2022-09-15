@@ -12,6 +12,7 @@ import astropy.units as u
 from spectral_cube import SpectralCube
 import line_fitting as lf
 import pylab as plt
+from astropy.io import fits
 
 def calc_rms(array_2d, padding):
     """Function to quickly estimate rms of a 2d_array."""
@@ -20,8 +21,8 @@ def calc_rms(array_2d, padding):
     min_radius = max_radius - padding
     rms_data = cutout_annulus(array_2d, center, min_radius, max_radius)
     n = len(np.where(rms_data != 0)[0])
-    return np.sqrt(np.sum(rms_data**2)/n)
 
+    return np.sqrt(np.sum(rms_data**2)/n)
 
 def find_keyword(hdulist, keyword):
     """Find the index in a hdulist with the keyword in it."""
@@ -116,10 +117,12 @@ class RadioCube():
         self.wcs_3d = self.spectral_cube.wcs
         self.wcs_2d = self.initial_moment0.wcs
         self.deg_per_pix = self.spectral_cube.header['CDELT2'] * u.deg
+        self.arc_per_pix = self.deg_per_pix.to(u.arcsec)
         self.equiv_radius_pix = self.equiv_radius.to(u.deg) / self.deg_per_pix
-        self.beam_size = (np.pi * (self.bmaj.value /self.deg_per_pix) *
-                          (self.bmin.value / self.deg_per_pix))/(4 * np.log(2))
+        self.beam_size = (np.pi * (self.bmaj /self.arc_per_pix) *
+                          (self.bmin / self.arc_per_pix))/(4 * np.log(2))
         self.number_of_deviations = 3
+        self.spectral_cube = self.spectral_cube * (u.beam/self.beam_size)
 
     def get_beam_info(self):
         """ Strip the bmaj, bmin, and Bpa, from the spectral cube moment0 map
@@ -145,7 +148,7 @@ class RadioCube():
 
         fit = lf.GuassianFit(self.spectral_cube.spectral_axis.value, sums,
                               self.spectral_cube.spectral_axis.unit,
-                              self.spectral_cube.unit * u.beam)
+                              self.spectral_cube.unit)
         return fit
 
     def calculate_channels(self, center):
@@ -182,6 +185,7 @@ class RadioCube():
             end_vel * u.km / u.s)
         
         self.integrated_emission_profile = profile
+        self.integrated_emission_profile.print_properties(5.25)
         self.moment0_used_for_profile = plottting_data
         return start_channel, end_channel
 

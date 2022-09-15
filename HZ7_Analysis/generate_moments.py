@@ -6,6 +6,7 @@ from spectral_cube import SpectralCube
 import astropy.units as u
 from astropy.io import fits
 from calc_channels import calc_rms
+import numpy as np
 
 
 MOMENT_NAMES = {
@@ -50,20 +51,26 @@ class MaskedMomentMaker(MomentMaker):
 
     def generate_moment_map(self, start_channel: int, end_channel: int, order: int):
         mid_channel = (start_channel + end_channel) // 2
+        temp_moment0_map = NonMaskedMomentMaker(self.infile, 'delete')
+        temp_moment0_map.generate_moment_map(start_channel, end_channel, order=0)
+        hdu = fits.open('delete_integrated.fits')
+        temp = hdu[0].data
 
         cube = SpectralCube.read(self.infile)
         cube_kms  = cube.with_spectral_unit(u.km / u.s, velocity_convention = 'optical')
-        rms = calc_rms(cube_kms[mid_channel], 20)
+        rms = calc_rms(temp, 20)
+
         sub_cube_kms = cube_kms.spectral_slab(
             cube_kms.spectral_axis[start_channel],
             cube_kms.spectral_axis[end_channel])
 
-        masked_cube = sub_cube_kms.with_mask(sub_cube_kms > 3*rms)
+        masked_cube = sub_cube_kms.with_mask(temp > 3*rms)
         if order == 2:
             moment_map = masked_cube.linewidth_sigma()
         else:
             moment_map = masked_cube.moment(order=order)
         moment_map.write(f'{self.outfile}_Masked_{MOMENT_NAMES[order]}.fits', overwrite = True)
+        os.remove('delete_integrated.fits')
 
 
 def main():
